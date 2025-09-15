@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | AI Academicy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #6a5af9; --secondary-color: #a19dff; --background-color: #f0f2f5;
+            --sidebar-bg: #1e293b; --card-bg: #ffffff; --text-color: #4a5568;
+            --heading-color: #1a202c; --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+            --border-radius: 1rem; --transition-speed: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); color: var(--text-color); display: flex; overflow-x: hidden; }
+
+        .app-container { display: flex; width: 100vw; height: 100vh; }
+
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; padding: 1.5rem 1rem; display: flex; flex-direction: column; transition: width var(--transition-speed); z-index: 1000; }
+        .sidebar.collapsed { width: 88px; }
+        .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; padding: 0 0.5rem; }
+        .sidebar-header .logo-icon { font-size: 2rem; color: var(--primary-color); }
+        .sidebar-header .logo-text { font-size: 1.5rem; font-weight: 600; white-space: nowrap; opacity: 1; transition: opacity 0.2s, width 0.2s; }
+        .sidebar.collapsed .logo-text { opacity: 0; width: 0; display: none; }
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+        .nav-item { margin-bottom: 0.5rem; position: relative; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #94a3b8; text-decoration: none; transition: var(--transition-speed); white-space: nowrap; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(106, 90, 249, 0.2); color: #ffffff; }
+        .nav-link .nav-icon { font-size: 1.4rem; margin-right: 1rem; min-width: 24px; text-align: center; transition: margin var(--transition-speed); }
+        .sidebar.collapsed .nav-link { justify-content: center; }
+        .sidebar.collapsed .nav-link .nav-icon { margin-right: 0; }
+        .sidebar.collapsed .nav-text { display: none; }
+        .tooltip { position: absolute; left: 100%; top: 50%; transform: translateY(-50%) translateX(-10px); background-color: #fff; color: var(--heading-color); padding: 0.5rem 1rem; border-radius: 0.5rem; white-space: nowrap; box-shadow: var(--shadow); z-index: 10; font-weight: 500; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
+        .sidebar.collapsed .nav-item:hover .tooltip { visibility: visible; opacity: 1; transform: translateX(0); }
+        .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
+        .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
+        
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; transition: margin-left var(--transition-speed); }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header-left .welcome-msg { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
+        .header-left .welcome-sub { color: var(--text-color); }
+        .profile-dropdown img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid var(--primary-color); }
+        .sidebar-toggle { font-size: 1.5rem; cursor: pointer; color: #94a3b8; background: none; border: none; transition: var(--transition-speed); }
+        .sidebar-toggle:hover { color: #fff; }
+        .mobile-sidebar-toggle { display: none; } /* Initially hidden on desktop */
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; transition: var(--transition-speed); animation: fadeIn 0.5s ease-out forwards; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+        .stat-icon { font-size: 2.5rem; padding: 0.8rem; border-radius: 50%; color: #fff; }
+        .stat-icon.bg-1 { background: linear-gradient(45deg, #6a5af9, #d57bff); }
+        .stat-icon.bg-2 { background: linear-gradient(45deg, #4ade80, #a3e635); }
+        .stat-info .stat-number { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
+        .stat-info .stat-label { font-size: 0.9rem; color: var(--text-color); }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .grid-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); animation: fadeIn 0.5s ease-out forwards; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: var(--heading-color); }
+        #chart-container, #pie-chart-container { height: 300px; position: relative; }
+        .pie-center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .pie-center-text .percentage { font-size: 2.5rem; font-weight: 700; color: var(--heading-color); }
+        .pie-center-text .label { color: var(--text-color); }
+        .course-list { list-style: none; }
+        .course-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border-color); }
+        .course-item:last-child { border-bottom: none; }
+        .course-info { display: flex; align-items: center; gap: 1rem; }
+        .course-icon { font-size: 1.8rem; color: var(--primary-color); }
+        .course-title { font-weight: 500; color: var(--heading-color); }
+        .course-progress-text { font-size: 0.8rem; color: var(--text-color); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- NEW: Media Queries for Responsive Design --- */
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; left: -260px; height: 100%; }
+            .sidebar.open { left: 0; }
+            .main-content { margin-left: 0; }
+            .sidebar-toggle { display: none; }
+            .mobile-sidebar-toggle { display: block; color: var(--text-color); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .header-left .welcome-msg { font-size: 1.25rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bxs-brain logo-icon'></i>
+                <h1 class="logo-text">AI Academicy</h1>
+                <button class="sidebar-toggle" id="sidebar-toggle"><i class='bx bx-chevrons-left'></i></button>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link active"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
+                    <span class="tooltip">Dashboard</span>
+                </li>
+                <li class="nav-item">
+                    <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
+                    <span class="tooltip">Assessments</span>
+                </li>
+                <li class="nav-item">
+                    <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
+                    <span class="tooltip">Profile</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="logout-btn nav-link" id="logout-btn">
+                    <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
+                    <span class="tooltip">Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
+                    <div>
+                        <h2 class="welcome-msg" id="welcome-message">Welcome Back!</h2>
+                        <p class="welcome-sub">Here's your learning progress today.</p>
+                    </div>
+                </div>
+                <a href="profile.html" class="profile-dropdown">
+                    <img id="profile-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="User Profile">
+                </a>
+            </header>
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-1"><i class='bx bxs-edit-alt'></i></div>
+                    <div class="stat-info"><span class="stat-number" id="assessments-completed">0</span><span class="stat-label">Assessments Completed</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-2"><i class='bx bxs-bar-chart-alt-2'></i></div>
+                    <div class="stat-info"><span class="stat-number" id="average-score">0%</span><span class="stat-label">Average Score</span></div>
+                </div>
+            </section>
+            
+            <section class="dashboard-grid">
+                <div class="grid-card" id="performance-overview">
+                    <div class="card-header"><h3 class="card-title">Performance Overview</h3></div>
+                    <div id="chart-container"><canvas id="performanceChart"></canvas></div>
+                </div>
+                <div class="grid-card" id="courses-overview">
+                    <div class="card-header"><h3 class="card-title">Overall Progress</h3></div>
+                    <div id="pie-chart-container">
+                         <canvas id="coursesPieChart"></canvas>
+                         <div class="pie-center-text"><span class="percentage" id="overall-progress">0%</span><span class="label">Completed</span></div>
+                    </div>
+                </div>
+                <div class="grid-card" id="recent-assessments">
+                    <div class="card-header"><h3 class="card-title">Recent Assessments</h3></div>
+                    <ul class="course-list" id="recent-assessments-list"></ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const firebaseConfig = {
+                apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
+
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    } catch (e) { console.error("Firebase init error", e); }
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            initializeDashboard(user);
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    function initializeDashboard(user) {
+        const studentId = user.uid;
+        const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E`;
+        
+        db.collection('users').doc(studentId).onSnapshot(doc => {
+            if (doc.exists) {
+                const userData = doc.data();
+                const studentName = userData.name || 'Student';
+                document.getElementById('welcome-message').innerText = `Welcome Back, ${studentName.split(' ')[0]}!`;
+                document.getElementById('profile-img').src = userData.profilePicUrl || defaultAvatar;
+            }
+        });
+
+        let allTests = [];
+        db.collection('tests').onSnapshot(testsSnapshot => {
+            allTests = testsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            db.collection('submissions').where('userId', '==', studentId).onSnapshot(submissionsSnapshot => {
+                const submissions = [];
+                submissionsSnapshot.forEach(doc => submissions.push(doc.data()));
+                updateDashboardUI(allTests, submissions);
+            });
+        });
+    }
+
+    function updateDashboardUI(allTests, submissions) {
+        const completedCount = submissions.length;
+        const totalTestsCount = allTests.length;
+        let totalScore = 0;
+        let totalMaxMarks = 0;
+        submissions.forEach(sub => {
+            totalScore += sub.score;
+            totalMaxMarks += sub.totalMarks;
+        });
+
+        const averageScore = totalMaxMarks > 0 ? ((totalScore / totalMaxMarks) * 100).toFixed(0) : 0;
+        const overallProgress = totalTestsCount > 0 ? ((completedCount / totalTestsCount) * 100).toFixed(0) : 0;
+        
+        document.getElementById('assessments-completed').textContent = completedCount;
+        document.getElementById('average-score').textContent = `${averageScore}%`;
+
+        const chartLabels = [];
+        const chartScores = [];
+        const testsMap = new Map(allTests.map(test => [test.id, test.title]));
+        
+        submissions.sort((a,b) => b.endTime.toMillis() - a.endTime.toMillis()).forEach(sub => {
+            const testTitle = testsMap.get(sub.testId) || 'Unknown Test';
+            chartLabels.push(testTitle);
+            chartScores.push(((sub.score / sub.totalMarks) * 100).toFixed(0));
+        });
+        updatePerformanceChart({ labels: chartLabels.reverse(), scores: chartScores.reverse() });
+
+        document.getElementById('overall-progress').textContent = `${overallProgress}%`;
+        updateCoursesPieChart([completedCount, totalTestsCount - completedCount]);
+
+        const recentList = document.getElementById('recent-assessments-list');
+        recentList.innerHTML = '';
+        if(submissions.length === 0) {
+            recentList.innerHTML = '<p>No assessments completed yet.</p>';
+        } else {
+            submissions.slice(0, 4).forEach(sub => {
+                const testTitle = testsMap.get(sub.testId) || 'Unknown Test';
+                const li = document.createElement('li');
+                li.className = 'course-item';
+                li.innerHTML = `
+                    <div class="course-info">
+                        <i class='bx bxs-edit-alt course-icon'></i>
+                        <div>
+                            <h4 class="course-title">${testTitle}</h4>
+                            <p class="course-progress-text">Score: ${sub.score}/${sub.totalMarks}</p>
+                        </div>
+                    </div>`;
+                recentList.appendChild(li);
+            });
+        }
+    }
+
+    let performanceChart;
+    function updatePerformanceChart(data) {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        if(performanceChart) performanceChart.destroy();
+        performanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Score in %', data: data.scores,
+                    backgroundColor: 'rgba(106, 90, 249, 0.7)',
+                    borderColor: 'rgba(106, 90, 249, 1)',
+                    borderWidth: 1, borderRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, max: 100, ticks: { callback: value => value + "%" } } },
+                plugins: { legend: { display: false } },
+            }
+        });
+    }
+
+    let coursesPieChart;
+    function updateCoursesPieChart(data) {
+        const ctx = document.getElementById('coursesPieChart').getContext('2d');
+        if(coursesPieChart) coursesPieChart.destroy();
+        coursesPieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Pending'],
+                datasets: [{
+                    data: data,
+                    backgroundColor: [ 'rgba(106, 90, 249, 1)', 'rgba(230, 230, 230, 1)' ],
+                    borderColor: 'rgba(255, 255, 255, 1)',
+                    borderWidth: 4,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            }
+        });
+    }
+    
+    // --- Sidebar and Logout Logic ---
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
+
+    mobileSidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+    
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        auth.signOut().then(() => {
+            window.location.href = 'index.html';
+        });
+    });
+});
+</script>
+</body>
+</html>

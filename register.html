@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Assessment Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <header class="public-header">
+            <img src="https://placehold.co/150x50/ffffff/3498db?text=yedge" alt="Yedge Logo" class="logo">
+            <nav>
+                <a href="#">Home</a>
+                <a href="#">About Us</a>
+                <a href="#">Our Clients</a>
+                <a href="#">Testimonials</a>
+            </nav>
+        </header>
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Step In. Stand Out. Get Placed.</h2>
+                </div>
+                <form id="login-form">
+                    <div class="input-group">
+                        <input type="email" id="email" name="email" required placeholder="Email / Reg No.">
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="password" name="password" required placeholder="Password">
+                    </div>
+                    <a href="#" class="forgot-password">Forgot Your Password?</a>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <p class="auth-switch">Don't have an account? <a href="register.html">Register Now</a></p>
+                    <p class="auth-switch admin-link">Are you an administrator? <a href="admin.html">Login Here</a></p>
+                    <div id="error-message" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script src="app.js"></script>
+    <script>
+        initializeApp();
+    </script>
+</body>
+</html>
+ 

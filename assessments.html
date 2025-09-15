@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessments | AI Academicy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #6a5af9; --secondary-color: #a19dff; --success-color: #28a745;
+            --warning-color: #ffc107; --info-color: #17a2b8; --danger-color: #dc3545;
+            --background-color: #f0f2f5; --sidebar-bg: #1e293b; --card-bg: #ffffff; 
+            --text-color: #4a5568; --heading-color: #1a202c; --border-color: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --border-radius: 1rem; --transition-speed: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); color: var(--text-color); display: flex; overflow-x: hidden; }
+        .app-container { display: flex; width: 100vw; height: 100vh; }
+        .sidebar { width: 260px; z-index: 1000; background-color: var(--sidebar-bg); color: #cbd5e1; padding: 1.5rem 1rem; display: flex; flex-direction: column; transition: left var(--transition-speed); }
+        .sidebar-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; padding: 0 0.5rem; }
+        .sidebar-header .logo-icon { font-size: 2rem; color: var(--primary-color); }
+        .sidebar-header .logo-text { font-size: 1.5rem; font-weight: 600; white-space: nowrap; }
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+        .nav-item { margin-bottom: 0.5rem; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #94a3b8; text-decoration: none; transition: var(--transition-speed); white-space: nowrap; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(106, 90, 249, 0.2); color: #ffffff; }
+        .nav-link .nav-icon { font-size: 1.4rem; margin-right: 1rem; min-width: 24px; text-align: center; }
+        .sidebar-footer { border-top: 1px solid #334155; padding-top: 1rem; }
+        .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .main-header .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
+        .profile-dropdown img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid var(--primary-color); }
+        .assessments-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+        .filter-buttons { display: flex; gap: 0.5rem; background-color: var(--card-bg); padding: 0.5rem; border-radius: 2rem; box-shadow: var(--shadow); }
+        .filter-btn { padding: 0.5rem 1.5rem; border: none; background-color: transparent; color: var(--text-color); font-weight: 500; border-radius: 1.5rem; cursor: pointer; transition: var(--transition-speed); }
+        .filter-btn.active { background-color: var(--primary-color); color: #fff; box-shadow: 0 4px 10px rgba(106, 90, 249, 0.4); }
+        .assessments-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .assessment-card { background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; flex-direction: column; transition: transform var(--transition-speed), box-shadow var(--transition-speed); overflow: hidden; animation: fadeIn 0.5s ease-out forwards; }
+        .assessment-card:hover { transform: translateY(-5px); box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1); }
+        .card-header-status { padding: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-header-status h3 { font-size: 1.25rem; font-weight: 600; color: var(--heading-color); line-height: 1.3; margin-right: 1rem; }
+        .status-tag { padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; border-radius: 1rem; color: #fff; white-space: nowrap; }
+        .status-active { background-color: var(--success-color); }
+        .status-upcoming { background-color: var(--info-color); }
+        .status-completed { background-color: #6c757d; }
+        .status-expired { background-color: var(--danger-color); }
+        .card-body-info { padding: 0 1.25rem 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; color: var(--text-color); }
+        .info-item { display: flex; align-items: center; gap: 0.5rem; }
+        .info-item i { font-size: 1.2rem; color: var(--primary-color); }
+        .info-item span { font-weight: 500; }
+        .info-item .label { font-size: 0.85rem; display: block; color: #a0aec0; }
+        .card-footer-action { margin-top: auto; background-color: #f7faff; padding: 1rem 1.25rem; border-top: 1px solid var(--border-color); }
+        .action-btn { width: 100%; padding: 0.75rem; font-size: 1rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer; transition: var(--transition-speed); text-decoration: none; display: block; text-align: center; }
+        .btn-start { background-color: var(--primary-color); color: #fff; }
+        .btn-start:hover:not(:disabled) { background-color: #5244d4; }
+        .btn-start:disabled { background-color: #ccc; cursor: not-allowed; }
+        .btn-results { background-color: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); }
+        .btn-results:hover { background-color: rgba(106, 90, 249, 0.1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- NEW: Media Queries for Responsive Design --- */
+        .mobile-sidebar-toggle { display: none; } /* Hide on desktop */
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; left: -260px; height: 100%; }
+            .sidebar.open { left: 0; }
+            .main-content { margin-left: 0; }
+            .mobile-sidebar-toggle {
+                display: block; background: none; border: none;
+                font-size: 1.5rem; cursor: pointer; color: var(--text-color);
+            }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .assessments-header { flex-direction: column; gap: 1.5rem; }
+            .assessments-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bxs-brain logo-icon'></i>
+                <h1 class="logo-text">AI Academicy</h1>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a></li>
+                <li class="nav-item"><a href="assessments.html" class="nav-link active"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                 <button class="logout-btn nav-link" id="logout-btn">
+                    <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
+                <h2 class="page-title">Assessments</h2>
+                <a href="profile.html" class="profile-dropdown">
+                    <img id="profile-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="User Profile">
+                </a>
+            </header>
+
+            <section class="assessments-container">
+                <div class="assessments-header">
+                    <div class="filter-buttons" id="filter-container">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="active">Active</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                    </div>
+                </div>
+                <div class="assessments-grid" id="assessments-grid"></div>
+            </section>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const firebaseConfig = {
+          apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
+
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    } catch (e) { console.error("Firebase init error", e); }
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const gridContainer = document.getElementById('assessments-grid');
+    const filterContainer = document.getElementById('filter-container');
+    const logoutBtn = document.getElementById('logout-btn');
+    const sidebar = document.getElementById('sidebar');
+    const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+
+    let currentFilter = 'all';
+    let allAssessmentsData = [];
+    let unsubscribeTests = null;
+    let unsubscribeSubmissions = null;
+    const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E`;
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            setupRealtimeListeners(user.uid);
+            db.collection('users').doc(user.uid).onSnapshot(doc => {
+                if(doc.exists && doc.data().profilePicUrl) {
+                    document.getElementById('profile-img').src = doc.data().profilePicUrl;
+                } else {
+                    document.getElementById('profile-img').src = defaultAvatar;
+                }
+            });
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    function setupRealtimeListeners(userId) {
+        if (unsubscribeTests) unsubscribeTests();
+        if (unsubscribeSubmissions) unsubscribeSubmissions();
+
+        unsubscribeTests = db.collection('tests').orderBy('startTime', 'desc')
+            .onSnapshot(testsSnapshot => {
+                allAssessmentsData = [];
+                testsSnapshot.forEach(doc => {
+                    allAssessmentsData.push({ id: doc.id, ...doc.data() });
+                });
+                listenForSubmissions(userId);
+            }, error => console.error("Error fetching tests:", error));
+    }
+
+    function listenForSubmissions(userId) {
+        if (unsubscribeSubmissions) unsubscribeSubmissions();
+        unsubscribeSubmissions = db.collection('submissions').where('userId', '==', userId)
+            .onSnapshot(submissionsSnapshot => {
+                const submissionsMap = new Map();
+                submissionsSnapshot.forEach(doc => {
+                    submissionsMap.set(doc.data().testId, {id: doc.id, ...doc.data()});
+                });
+                const combinedData = allAssessmentsData.map(test => {
+                    const submission = submissionsMap.get(test.id);
+                    return { ...test, completed: !!submission, submission: submission };
+                });
+                displayFilteredAssessments(combinedData);
+            }, error => console.error("Error fetching submissions:", error));
+    }
+
+    function displayFilteredAssessments(assessments) {
+        gridContainer.innerHTML = '';
+        const filtered = assessments.filter(assessment => {
+            if (currentFilter === 'all') return true;
+            if (currentFilter === 'completed') return assessment.completed;
+            const now = new Date();
+            const startTime = assessment.startTime.toDate();
+            const endTime = assessment.endTime.toDate();
+            if (currentFilter === 'active') return !assessment.completed && now >= startTime && now <= endTime;
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            gridContainer.innerHTML = `<p>No assessments found for the "${currentFilter}" category.</p>`;
+            return;
+        }
+
+        filtered.forEach(assessment => {
+            const card = document.createElement('div');
+            card.className = 'assessment-card';
+
+            const now = new Date();
+            const startTime = assessment.startTime.toDate();
+            const endTime = assessment.endTime.toDate();
+            let status = 'Upcoming';
+            let statusClass = 'status-upcoming';
+            let buttonHtml = `<button class="action-btn btn-start" disabled>Starts Soon</button>`;
+
+            if (assessment.completed) {
+                status = 'Completed';
+                statusClass = 'status-completed';
+                buttonHtml = `<a href="results.html?subId=${assessment.submission.id}" class="action-btn btn-results">View Results</a>`;
+            } else if (now >= startTime && now <= endTime) {
+                status = 'Active';
+                statusClass = 'status-active';
+                buttonHtml = `<a href="test.html?testId=${assessment.id}" class="action-btn btn-start">Start Test</a>`;
+            } else if (now > endTime) {
+                status = 'Expired';
+                statusClass = 'status-expired';
+                buttonHtml = `<button class="action-btn btn-start" disabled>Time Expired</button>`;
+            }
+
+            card.innerHTML = `
+                <div class="card-header-status">
+                    <h3>${assessment.title}</h3>
+                    <span class="status-tag ${statusClass}">${status}</span>
+                </div>
+                <div class="card-body-info">
+                    <div class="info-item"><i class='bx bxs-calendar-play'></i><div><span class="value">${startTime.toLocaleString()}</span><span class="label">Starts On</span></div></div>
+                    <div class="info-item"><i class='bx bxs-calendar-check'></i><div><span class="value">${endTime.toLocaleString()}</span><span class="label">Ends On</span></div></div>
+                </div>
+                <div class="card-footer-action">${buttonHtml}</div>
+            `;
+            gridContainer.appendChild(card);
+        });
+    }
+
+    filterContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            filterContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.getAttribute('data-filter');
+            const user = auth.currentUser;
+            if (user) listenForSubmissions(user.uid);
+        }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => window.location.href = 'index.html');
+    });
+
+    // NEW: Mobile sidebar toggle logic
+    mobileSidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+});
+</script>
+</body>
+</html>

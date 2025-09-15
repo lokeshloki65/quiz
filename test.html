@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Assessment | AI Academicy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --primary-color: #6a5af9; --card-bg: #ffffff; --background-color: #f0f2f5;
+            --text-color: #4a5568; --heading-color: #1a202c; --border-color: #e2e8f0;
+            --success-color: #28a745; --warning-color: #ffc107; --danger-color: #dc3545;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); font-size: 16px; }
+        
+        #loading-overlay, .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1rem;
+            z-index: 9999; transition: opacity 0.3s ease;
+        }
+        .spinner {
+            width: 50px; height: 50px; border-radius: 50%;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-overlay p { color: #fff; font-weight: 500; font-size: 1.1rem; }
+        
+        .modal {
+            background: var(--card-bg); padding: 2rem; border-radius: 1rem;
+            text-align: center; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: scale(0.9); animation: modal-pop 0.3s ease forwards;
+        }
+        @keyframes modal-pop { to { transform: scale(1); } }
+        .modal .icon { font-size: 4rem; }
+        .modal h2 { margin: 1rem 0; color: var(--heading-color); }
+        .modal p { margin-bottom: 1.5rem; line-height: 1.6; }
+        .modal-buttons { display: flex; gap: 1rem; justify-content: center; }
+        .btn { padding: 0.7rem 1.5rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: 0.2s ease; }
+        .btn-warning { background-color: var(--warning-color); color: var(--heading-color); }
+        .btn-danger { background-color: var(--danger-color); color: #fff; }
+        .btn-light { background-color: #e2e6ea; color: var(--heading-color); }
+        
+        .test-container { display: flex; flex-direction: column; height: 100vh; visibility: hidden; }
+        .test-container.loaded { visibility: visible; animation: fadeIn 0.5s; }
+        .test-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .test-title h2 { font-size: 1.2rem; color: var(--heading-color); }
+        .timer-container { display: flex; align-items: center; gap: 0.5rem; }
+        .timer { background: var(--primary-color); color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 1.1rem; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; border-color: #ccc; }
+        .btn-submit { background-color: var(--danger-color); color: #fff; }
+        .btn-primary { background-color: var(--primary-color); color: #fff; }
+        .btn-secondary { background-color: transparent; border: 1px solid #adb5bd; color: var(--text-color); }
+        .test-body { display: flex; flex-grow: 1; padding: 1.5rem; gap: 1.5rem; overflow: hidden; }
+        .question-area { flex-grow: 1; background: var(--card-bg); border-radius: 0.75rem; padding: 2rem; display: flex; flex-direction: column; }
+        .question-header h3 { color: var(--heading-color); margin-bottom: 1.5rem; }
+        .question-text { font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem; flex-grow: 1; overflow-y: auto; }
+        .options-container { display: flex; flex-direction: column; gap: 1rem; }
+        .option { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; cursor: pointer; user-select: none; transition: 0.2s; }
+        .option:hover { border-color: var(--primary-color); background: #f7f5ff; }
+        .option.selected { border-color: var(--primary-color); background: #e9e6ff; font-weight: 500; }
+        .option input { display: none; }
+        .question-footer { margin-top: auto; display: flex; justify-content: space-between; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
+        .palette-area { width: 300px; min-width: 250px; background: var(--card-bg); border-radius: 0.75rem; padding: 1.5rem; display: flex; flex-direction: column; }
+        .palette-header { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;}
+        .palette-summary { display: flex; justify-content: space-around; text-align: center; font-size: 0.8rem; margin-bottom: 1.5rem; }
+        .summary-item .count { font-size: 1.5rem; font-weight: 600; }
+        .question-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 0.75rem; overflow-y: auto; padding: 5px; }
+        .palette-btn { width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .palette-btn.not-answered { background: #e9ecef; }
+        .palette-btn.answered { background: var(--success-color); color: #fff; border-color: var(--success-color); }
+        .palette-btn.current { border-width: 2px; border-color: var(--primary-color); transform: scale(1.1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text">Loading Test...</p>
+    </div>
+    
+    <div class="modal-overlay" id="warning-overlay" style="display: none;">
+        <div class="modal">
+            <div class="icon" style="color: var(--warning-color);"><i class='bx bxs-error-alt'></i></div>
+            <h2 id="modal-title">Warning!</h2>
+            <p id="modal-text">Leaving the test window is not allowed. If you leave again, your test will be submitted automatically.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-warning" id="modal-ok-btn">I Understand</button>
+                <button class="btn btn-danger" id="modal-confirm-btn" style="display: none;">Submit</button>
+                <button class="btn btn-light" id="modal-cancel-btn" style="display: none;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container" id="test-container">
+        <header class="test-header">
+            <div class="test-title"><h2 id="test-title-header">Loading Test...</h2></div>
+            <div class="timer-container"><i class='bx bxs-time-five'></i><span>Time Left:</span><div id="timer" class="timer">00:00</div></div>
+            <button class="btn btn-submit" id="submit-test-btn">Submit Test</button>
+        </header>
+        <main class="test-body">
+            <section class="question-area">
+                <div class="question-header"><h3 id="question-number">Question No. 1</h3></div>
+                <p id="question-text" class="question-text">Loading question...</p>
+                <div id="options-container" class="options-container"></div>
+                <div class="question-footer">
+                     <button class="btn btn-secondary" id="prev-btn">Previous</button>
+                     <button class="btn btn-primary" id="next-btn">Save & Next</button>
+                </div>
+            </section>
+            <aside class="palette-area">
+                <h3 class="palette-header">Question Palette</h3>
+                <div class="palette-summary">
+                    <div class="summary-item"><div id="answered-count" class="count">0</div>Answered</div>
+                    <div class="summary-item"><div id="not-answered-count" class="count">0</div>Not Answered</div>
+                </div>
+                <div id="question-palette" class="question-palette"></div>
+            </aside>
+        </main>
+    </div>
+    
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const firebaseConfig = {
+          apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
+
+
+    try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
+    catch(e) { console.error("Firebase init error", e); }
+
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    const testContainer = document.getElementById('test-container');
+    const testTitleHeader = document.getElementById('test-title-header');
+    const timerDisplay = document.getElementById('timer');
+    const questionNumberEl = document.getElementById('question-number');
+    const questionTextEl = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const paletteContainer = document.getElementById('question-palette');
+    const answeredCountEl = document.getElementById('answered-count');
+    const notAnsweredCountEl = document.getElementById('not-answered-count');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-test-btn');
+    
+    const warningOverlay = document.getElementById('warning-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+    const modalOkBtn = document.getElementById('modal-ok-btn');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+    let questions = [], userAnswers = {}, currentQuestionIndex = 0;
+    let timerInterval, testId, userId, focusLossCount = 0;
+    const startTime = firebase.firestore.Timestamp.now();
+
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            userId = user.uid;
+            const urlParams = new URLSearchParams(window.location.search);
+            testId = urlParams.get('testId');
+            if (!testId) return handleFatalError("Test ID not found!");
+            
+            const submissionQuery = await db.collection('submissions').where('userId', '==', userId).where('testId', '==', testId).limit(1).get();
+            if (!submissionQuery.empty) return handleFatalError("You have already completed this test.", true);
+            
+            await startTest(testId);
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    async function startTest(id) {
+        try {
+            const testDoc = await db.collection('tests').doc(id).get();
+            if (!testDoc.exists) throw new Error("Assessment not found!");
+            
+            const testData = testDoc.data();
+            testTitleHeader.textContent = testData.title;
+
+            const questionsSnapshot = await db.collection('tests').doc(id).collection('questions').orderBy('questionNumber').get();
+            if (questionsSnapshot.empty) throw new Error("This test has no questions!");
+            
+            questions = questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // --- NEW: Fisher-Yates Shuffle Algorithm ---
+            // This shuffles the questions array into a random order for every user.
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+            // --- End of Shuffle ---
+            
+            startTimer(testData.duration);
+            renderQuestion(0);
+            renderPalette();
+            updateSummary();
+            
+            loadingOverlay.style.display = 'none';
+            testContainer.classList.add('loaded');
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        } catch (error) {
+            handleFatalError(error.message);
+        }
+    }
+
+    function renderQuestion(index) {
+        currentQuestionIndex = index;
+        const q = questions[index];
+        questionNumberEl.textContent = `Question No. ${index + 1} of ${questions.length}`;
+        questionTextEl.innerHTML = q.questionText;
+        optionsContainer.innerHTML = '';
+        q.options.forEach(optionText => {
+            const optionLabel = document.createElement('label');
+            optionLabel.className = 'option';
+            const radioInput = document.createElement('input');
+            radioInput.type = 'radio';
+            radioInput.name = `question-${q.id}`;
+            radioInput.value = optionText;
+            if (userAnswers[q.id] === optionText) {
+                radioInput.checked = true;
+                optionLabel.classList.add('selected');
+            }
+            radioInput.addEventListener('change', () => {
+                userAnswers[q.id] = radioInput.value;
+                optionsContainer.querySelectorAll('.option').forEach(l => l.classList.remove('selected'));
+                optionLabel.classList.add('selected');
+                renderPalette();
+                updateSummary();
+            });
+            optionLabel.appendChild(radioInput);
+            optionLabel.appendChild(document.createTextNode(optionText));
+            optionsContainer.appendChild(optionLabel);
+        });
+        prevBtn.disabled = index === 0;
+        nextBtn.textContent = (index === questions.length - 1) ? 'Finish' : 'Save & Next';
+    }
+
+    function renderPalette() {
+        paletteContainer.innerHTML = '';
+        questions.forEach((q, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'palette-btn';
+            btn.textContent = index + 1;
+            if (userAnswers[q.id]) btn.classList.add('answered');
+            else btn.classList.add('not-answered');
+            if (index === currentQuestionIndex) btn.classList.add('current');
+            btn.addEventListener('click', () => renderQuestion(index));
+            paletteContainer.appendChild(btn);
+        });
+    }
+
+    function updateSummary() {
+        const answeredCount = Object.keys(userAnswers).length;
+        answeredCountEl.textContent = answeredCount;
+        notAnsweredCountEl.textContent = questions.length - answeredCount;
+    }
+
+    function startTimer(durationInMinutes) {
+        let timeLeft = durationInMinutes * 60;
+        timerInterval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerDisplay.textContent = "00:00";
+                showCustomAlert("Time's up! Your test will be submitted automatically.", () => submitTest("Time's up"));
+                return;
+            }
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const seconds = (timeLeft % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+        }, 1000);
+    }
+
+    prevBtn.addEventListener('click', () => {
+        if (currentQuestionIndex > 0) renderQuestion(currentQuestionIndex - 1);
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            renderQuestion(currentQuestionIndex + 1);
+        } else {
+            showCustomConfirm('This is the last question. Are you sure you want to submit?', submitTest);
+        }
+    });
+
+    submitBtn.addEventListener('click', () => {
+        showCustomConfirm('Are you sure you want to submit the test now?', submitTest);
+    });
+    
+    async function submitTest(reason = null) {
+        if (Object.keys(userAnswers).length < questions.length && !reason) {
+            showCustomAlert("You must answer all questions before submitting.");
+            return;
+        }
+
+        clearInterval(timerInterval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        loadingOverlay.style.display = 'flex';
+        loadingText.textContent = 'Submitting... Please do not close this window.';
+        
+        let score = 0;
+        questions.forEach(q => {
+            if (userAnswers[q.id] === q.correctAnswer) score++;
+        });
+        
+        try {
+            const submissionData = {
+                userId: userId, testId: testId, answers: userAnswers, score: score,
+                totalMarks: questions.length, startTime: startTime,
+                endTime: firebase.firestore.FieldValue.serverTimestamp(), status: 'Completed'
+            };
+            if(reason) submissionData.submissionReason = reason;
+            await db.collection('submissions').add(submissionData);
+            
+            showCustomAlert(`Test submitted successfully! Your score is ${score} out of ${questions.length}.`, () => {
+                window.location.href = 'assessments.html';
+            });
+        } catch (error) {
+            handleFatalError("There was an error submitting your test: " + error.message, true);
+        }
+    }
+
+    function handleVisibilityChange() {
+        if (document.hidden) {
+            focusLossCount++;
+            if (focusLossCount === 1) {
+                showCustomAlert("Warning: Leaving the test window is not allowed. If you leave again, your test will be submitted automatically.");
+            } else if (focusLossCount > 1) {
+                submitTest("Malpractice: Exceeded window leave limit.");
+            }
+        }
+    }
+
+    function showCustomAlert(message, callback) {
+        modalTitle.textContent = "Alert";
+        modalText.textContent = message;
+        modalOkBtn.style.display = 'inline-block';
+        modalConfirmBtn.style.display = 'none';
+        modalCancelBtn.style.display = 'none';
+        warningOverlay.style.display = 'flex';
+        
+        const okListener = () => {
+            warningOverlay.style.display = 'none';
+            modalOkBtn.removeEventListener('click', okListener);
+            if (callback) callback();
+        };
+        modalOkBtn.addEventListener('click', okListener);
+    }
+
+    function showCustomConfirm(message, confirmCallback) {
+        modalTitle.textContent = "Confirm Submission";
+        modalText.textContent = message;
+        modalOkBtn.style.display = 'none';
+        modalConfirmBtn.style.display = 'inline-block';
+        modalCancelBtn.style.display = 'inline-block';
+        warningOverlay.style.display = 'flex';
+
+        const confirmListener = () => {
+            warningOverlay.style.display = 'none';
+            modalConfirmBtn.removeEventListener('click', confirmListener);
+            modalCancelBtn.removeEventListener('click', cancelListener);
+            if (confirmCallback) confirmCallback();
+        };
+        const cancelListener = () => {
+            warningOverlay.style.display = 'none';
+            modalConfirmBtn.removeEventListener('click', confirmListener);
+            modalCancelBtn.removeEventListener('click', cancelListener);
+        };
+        modalConfirmBtn.addEventListener('click', confirmListener);
+        modalCancelBtn.addEventListener('click', cancelListener);
+    }
+
+    function handleFatalError(message, redirect = false) {
+        loadingText.textContent = `Error: ${message}`;
+        loadingOverlay.querySelector('.spinner').style.display = 'none';
+        if(redirect) {
+            setTimeout(() => { window.location.href = 'assessments.html'; }, 4000);
+        }
+    }
+});
+</script>
+</body>
+</html>

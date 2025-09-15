@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses | AI Academicy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        /* --- Global Styles & Variables (Same as other pages) --- */
+        :root {
+            --primary-color: #6a5af9;
+            --secondary-color: #a19dff;
+            --success-color: #28a745;
+            --background-color: #f0f2f5;
+            --sidebar-bg: #1e293b;
+            --card-bg: #ffffff;
+            --text-color: #4a5568;
+            --heading-color: #1a202c;
+            --border-color: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --border-radius: 1rem;
+            --transition-speed: 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* --- Main App Layout (Same as other pages) --- */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- Sidebar (Same as other pages) --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            transition: width var(--transition-speed);
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+        .sidebar-header .logo-icon { font-size: 2rem; color: var(--primary-color); }
+        .sidebar-header .logo-text { font-size: 1.5rem; font-weight: 600; white-space: nowrap; }
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+        .nav-item { margin-bottom: 0.5rem; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            border-radius: 0.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: var(--transition-speed);
+            white-space: nowrap;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(106, 90, 249, 0.2);
+            color: #ffffff;
+        }
+        .nav-link .nav-icon {
+            font-size: 1.4rem;
+            margin-right: 1rem;
+            min-width: 24px;
+            text-align: center;
+        }
+        .sidebar-footer { border-top: 1px solid #334155; padding-top: 1rem; }
+        .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
+
+        /* --- Main Content (Shared Styles) --- */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .main-header .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+        .profile-dropdown img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--primary-color);
+        }
+
+        /* --- Courses Page Specific Styles --- */
+        .courses-controls {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+        
+        .search-wrapper input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            transition: var(--transition-speed);
+        }
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 90, 249, 0.2);
+        }
+        .search-wrapper .bx-search {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #94a3b8;
+        }
+
+        .filter-wrapper select {
+            padding: 0.75rem 2rem 0.75rem 1rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            background-color: #fff;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1em;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .course-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-speed);
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .course-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.06);
+        }
+        
+        .card-thumbnail img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        .category-tag {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .course-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        
+        .course-description {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            line-height: 1.6;
+        }
+        
+        .course-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+        }
+        .course-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .course-meta i { font-size: 1.2rem; }
+        
+        .progress-bar-wrapper {
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .card-action .action-btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition-speed);
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        .card-action .action-btn:hover {
+            background-color: #5244d4;
+        }
+        .card-action .action-btn.completed {
+            background-color: var(--success-color);
+        }
+        .card-action .action-btn.completed:hover {
+            background-color: #218838;
+        }
+        
+        .no-courses-found {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 4rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar { position: absolute; left: -260px; z-index: 1000; height: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bxs-brain logo-icon'></i>
+                <h1 class="logo-text">AI Academicy</h1>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class='bx bxs-dashboard nav-icon'></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="courses.html" class="nav-link active">
+                        <i class='bx bxs-book-alt nav-icon'></i>
+                        <span class="nav-text">Courses</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="assessments.html" class="nav-link">
+                        <i class='bx bxs-edit nav-icon'></i>
+                        <span class="nav-text">Assessments</span>
+                    </a>
+                </li>
+                
+                 <li class="nav-item">
+                    <a href="profile.html" class="nav-link">
+                        <i class='bx bxs-user-circle nav-icon'></i>
+                        <span class="nav-text">Profile</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                 <button class="logout-btn nav-link">
+                    <i class='bx bx-log-out nav-icon'></i>
+                    <span class="nav-text">Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h2 class="page-title">My Courses</h2>
+                <div class="profile-dropdown">
+                    <img id="header-profile-img" src="https://yardstick.academy/public/assets/img/profile/68c25b68c921e9.11067674.jpg" alt="User Profile">
+                </div>
+            </header>
+
+            <div class="courses-controls">
+                <div class="search-wrapper">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="search-input" placeholder="Search for your courses...">
+                </div>
+                <div class="filter-wrapper">
+                    <select id="category-filter">
+                        <option value="all">All Categories</option>
+                        <option value="AI/ML">AI / ML</option>
+                        <option value="Data Science">Data Science</option>
+                        <option value="Web Development">Web Development</option>
+                    </select>
+                </div>
+                 <div class="filter-wrapper">
+                    <select id="progress-filter">
+                        <option value="all">All Progress</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="not-started">Not Started</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="course-grid" id="course-grid">
+                </div>
+            
+            <footer class="main-footer" style="text-align: center; margin-top: 2rem; padding: 1rem; color: #94a3b8; font-size: 0.9rem;">
+                <p>&copy; 2025 AI Academicy. All Rights Reserved. | Designed by <b>Code Crafters</b></p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- Mock Data for Courses ---
+            const mockCourses = [
+                {
+                    id: 1,
+                    title: "Introduction to Machine Learning",
+                    category: "AI/ML",
+                    description: "Learn the fundamentals of machine learning and build your first predictive models.",
+                    thumbnail: "https://images.unsplash.com/photo-1599658880436-c0179e50ed81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+                    lessons: 25,
+                    duration: "8h 30m",
+                    progress: 75
+                },
+                {
+                    id: 2,
+                    title: "Python for Data Science",
+                    category: "Data Science",
+                    description: "Master Python programming for data analysis, visualization, and manipulation with popular libraries.",
+                    thumbnail: "https://images.unsplash.com/photo-1555949963-ff98c872d8e1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+                    lessons: 42,
+                    duration: "15h",
+                    progress: 100
+                },
+                {
+                    id: 3,
+                    title: "Full-Stack Web Development",
+                    category: "Web Development",
+                    description: "Become a full-stack developer by learning front-end and back-end technologies from scratch.",
+                    thumbnail: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+                    lessons: 80,
+                    duration: "40h",
+                    progress: 30
+                },
+                {
+                    id: 4,
+                    title: "Deep Learning Specialization",
+                    category: "AI/ML",
+                    description: "Dive deep into neural networks, convolutional networks, and sequence models.",
+                    thumbnail: "https://images.unsplash.com/photo-1526374965328-5f61d25c0e56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+                    lessons: 35,
+                    duration: "22h",
+                    progress: 0
+                },
+                 {
+                    id: 5,
+                    title: "Big Data with Spark and Hadoop",
+                    category: "Data Science",
+                    description: "Understand and process large-scale datasets using the powerful Spark and Hadoop ecosystem.",
+                    thumbnail: "https://images.unsplash.com/photo-1582298539313-a8c52345eda4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+                    lessons: 38,
+                    duration: "18h",
+                    progress: 100
+                },
+                 {
+                    id: 6,
+                    title: "React - The Complete Guide",
+                    category: "Web Development",
+                    description: "Build powerful, fast, user-friendly and reactive web apps with the most popular JS library.",
+                    thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+                    lessons: 55,
+                    duration: "25h",
+                    progress: 50
+                }
+            ];
+
+            const courseGrid = document.getElementById('course-grid');
+            const searchInput = document.getElementById('search-input');
+            const categoryFilter = document.getElementById('category-filter');
+            const progressFilter = document.getElementById('progress-filter');
+
+            function renderCourses() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedCategory = categoryFilter.value;
+                const selectedProgress = progressFilter.value;
+
+                const filteredCourses = mockCourses.filter(course => {
+                    const matchesSearch = course.title.toLowerCase().includes(searchTerm);
+                    const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
+                    
+                    let matchesProgress = false;
+                    if (selectedProgress === 'all') {
+                        matchesProgress = true;
+                    } else if (selectedProgress === 'completed' && course.progress === 100) {
+                        matchesProgress = true;
+                    } else if (selectedProgress === 'in-progress' && course.progress > 0 && course.progress < 100) {
+                        matchesProgress = true;
+                    } else if (selectedProgress === 'not-started' && course.progress === 0) {
+                        matchesProgress = true;
+                    }
+                    
+                    return matchesSearch && matchesCategory && matchesProgress;
+                });
+
+                courseGrid.innerHTML = ''; // Clear existing cards
+
+                if (filteredCourses.length === 0) {
+                    courseGrid.innerHTML = `<div class="no-courses-found"><h3>No courses found.</h3><p>Try adjusting your search or filters.</p></div>`;
+                    return;
+                }
+
+                filteredCourses.forEach(course => {
+                    const card = document.createElement('div');
+                    card.className = 'course-card';
+
+                    let buttonText = 'Start Course';
+                    let buttonClass = '';
+                    if (course.progress > 0 && course.progress < 100) {
+                        buttonText = 'Continue Learning';
+                    } else if (course.progress === 100) {
+                        buttonText = 'Completed';
+                        buttonClass = 'completed';
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-thumbnail">
+                            <img src="${course.thumbnail}" alt="${course.title}">
+                        </div>
+                        <div class="card-content">
+                            <span class="category-tag">${course.category}</span>
+                            <h3 class="course-title">${course.title}</h3>
+                            <p class="course-description">${course.description}</p>
+                            <div class="course-meta">
+                                <span><i class='bx bxs-videos'></i> ${course.lessons} Lessons</span>
+                                <span><i class='bx bxs-time'></i> ${course.duration}</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${course.progress}%;"></div>
+                                </div>
+                            </div>
+                            <div class="card-action">
+                                <button class="action-btn ${buttonClass}">${buttonText}</button>
+                            </div>
+                        </div>
+                    `;
+                    courseGrid.appendChild(card);
+                });
+            }
+
+            // --- Event Listeners ---
+            searchInput.addEventListener('input', renderCourses);
+            categoryFilter.addEventListener('change', renderCourses);
+            progressFilter.addEventListener('change', renderCourses);
+            
+            // --- Initial Load ---
+            renderCourses();
+        });
+    </script>
+</body>
+</html>

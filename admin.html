@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | AI Academicy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #6a5af9; --primary-color-light: #f0edff; --sidebar-bg: #1e293b; 
+            --card-bg: #ffffff; --background-color: #f8f9fa; --text-color: #4a5568; 
+            --heading-color: #1a202c; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+            --border-radius: 0.75rem; --transition-speed: 0.3s ease; --success-color: #28a745; --danger-color: #dc3545; --warning-color: #ffc107;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); display: flex; height: 100vh; overflow: hidden; position: relative; }
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); padding: 1.5rem 1rem; color: #cbd5e1; display: flex; flex-direction: column; z-index: 1000; transition: left var(--transition-speed); }
+        .sidebar-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem; }
+        .logo-icon { font-size: 2rem; color: var(--primary-color); }
+        .logo-text { font-size: 1.5rem; font-weight: 600; }
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #94a3b8; text-decoration: none; margin-bottom: 0.5rem; transition: var(--transition-speed); }
+        .nav-link:hover, .nav-link.active { background-color: rgba(106, 90, 249, 0.2); color: #fff; }
+        .nav-icon { font-size: 1.4rem; margin-right: 1rem; }
+        .main-content { flex-grow: 1; overflow-y: auto; padding: 2rem; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: var(--transition-speed); }
+        .btn-primary { background-color: var(--primary-color); color: #fff; }
+        .btn-secondary { background-color: #6c757d; color: #fff; }
+        .btn-success { background-color: var(--success-color); color:#fff; }
+        .card { background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-size: 0.9rem; text-transform: uppercase; color: #a0aec0; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; }
+        .form-row { display: flex; gap: 1rem; }
+        #admin-view > div { display: none; }
+        #admin-view > div.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); display: flex; align-items: center; gap: 1rem; }
+        .stat-icon { font-size: 2.5rem; padding: 1rem; border-radius: 50%; color: var(--primary-color); background: var(--primary-color-light); }
+        .stat-info h3 { font-size: 2rem; color: var(--heading-color); }
+        .stat-info p { color: var(--text-color); }
+        .results-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .results-header h2 { font-size: 1.5rem; }
+        .mobile-sidebar-toggle { display: none; }
+        .malpractice-icon { color: var(--warning-color); font-size: 1.2rem; margin-left: 0.5rem; cursor: help; }
+        .overlay { display: none; }
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; left: -260px; height: 100%; }
+            .sidebar.open { left: 0; }
+            .main-content { margin-left: 0; }
+            .mobile-sidebar-toggle { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); }
+            .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+            .overlay.active { display: block; }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .page-title { font-size: 1.25rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; gap: 0; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class='bx bxs-brain logo-icon'></i><span class="logo-text">AI Academicy</span></div>
+        <ul class="sidebar-nav">
+            <li><a href="#" class="nav-link active" data-view="dashboard-view"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-view="tests-view"><i class='bx bxs-spreadsheet nav-icon'></i>Test Management</a></li>
+            <li><a href="#" class="nav-link" data-view="students-view"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header class="main-header">
+            <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
+            <h1 id="page-title" class="page-title">Dashboard</h1>
+            <button class="btn btn-primary" id="header-action-btn">+ Create New Test</button>
+        </header>
+        <div id="admin-view">
+            <div id="dashboard-view" class="active">
+                <div class="stats-grid">
+                    <div class="stat-card"><i class='bx bxs-group stat-icon'></i><div class="stat-info"><h3 id="total-students">0</h3><p>Total Students</p></div></div>
+                    <div class="stat-card"><i class='bx bxs-spreadsheet stat-icon'></i><div class="stat-info"><h3 id="total-tests">0</h3><p>Total Tests Created</p></div></div>
+                    <div class="stat-card"><i class='bx bxs-check-square stat-icon'></i><div class="stat-info"><h3 id="total-submissions">0</h3><p>Total Submissions</p></div></div>
+                </div>
+            </div>
+            <div id="tests-view" class="card">
+                <table id="tests-table">
+                    <thead><tr><th>Test Title</th><th>Starts On</th><th>Ends On</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="create-test-view" class="card">
+                <form id="create-test-form">
+                    <div class="form-group"><label for="test-title">Test Title</label><input type="text" id="test-title" required></div>
+                    <div class="form-row">
+                        <div class="form-group"><label for="start-time">Start Time</label><input type="datetime-local" id="start-time" required></div>
+                        <div class="form-group"><label for="end-time">End Time</label><input type="datetime-local" id="end-time" required></div>
+                    </div>
+                    <div class="form-group"><label for="test-duration">Duration (in minutes)</label><input type="number" id="test-duration" required></div>
+                    <div class="form-group">
+                        <label for="question-file">Upload Questions (.txt file)</label><input type="file" id="question-file" accept=".txt" required>
+                        <small>Format: Numbered question, lettered options (a), b), etc.), and a line for "Correct Answer:". Separate questions with "---".</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Test</button>
+                    <button type="button" class="btn" id="cancel-btn">Cancel</button>
+                </form>
+            </div>
+            <div id="results-view">
+                <div class="results-header"><h2 id="results-test-title"></h2><button type="button" class="btn btn-secondary" id="back-to-tests-btn">← Back to Tests</button></div>
+                <div class="stats-grid">
+                    <div class="stat-card"><i class='bx bxs-bar-chart-alt-2 stat-icon'></i><div class="stat-info"><h3 id="avg-score">0%</h3><p>Average Score</p></div></div>
+                    <div class="stat-card"><i class='bx bxs-user-check stat-icon'></i><div class="stat-info"><h3 id="completion-rate">0%</h3><p>Completion Rate</p></div></div>
+                </div>
+                <div class="card"><canvas id="score-chart"></canvas></div>
+                <div class="card">
+                    <div class="results-header"><h3>Attended Students</h3><button class="btn btn-success" id="export-attended-btn">Export to Excel</button></div>
+                    <table id="attended-table">
+                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Score</th><th>Time Remaining</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="results-header"><h3>Not Attended Students</h3><button class="btn btn-success" id="export-not-attended-btn">Export to Excel</button></div>
+                    <table id="not-attended-table">
+                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Email</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="students-view">
+                <div class="card">
+                    <h3>All Students</h3>
+                    <p>Add new students manually using the Firebase Console. This list will update in real-time.</p>
+                    <table id="students-table">
+                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Email</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const firebaseConfig = {
+         apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
+    try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
+    catch(e) { console.error("Firebase init error", e); }
+
+    const db = firebase.firestore();
+    let scoreChartInstance = null;
+    let unsubscribeResults = null;
+    const navLinks = document.querySelectorAll('.nav-link');
+    const pageTitle = document.getElementById('page-title');
+    const headerActionBtn = document.getElementById('header-action-btn');
+    const sidebar = document.getElementById('sidebar');
+    const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+    const overlay = document.getElementById('overlay');
+    function switchView(viewId) {
+        document.querySelectorAll('#admin-view > div').forEach(view => view.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('data-view') === viewId));
+        const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'results-view': 'Test Results'};
+        pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
+        headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view') ? 'none' : 'block';
+        headerActionBtn.textContent = '+ Create New Test';
+    }
+    navLinks.forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            const viewId = e.currentTarget.getAttribute('data-view');
+            if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
+            switchView(viewId);
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+    });
+    headerActionBtn.addEventListener('click', () => switchView('create-test-view'));
+    document.getElementById('cancel-btn').addEventListener('click', () => switchView('tests-view'));
+    document.getElementById('back-to-tests-btn').addEventListener('click', () => {
+        if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
+        switchView('tests-view');
+    });
+    function loadDashboardStats() {
+        db.collection('users').where('role', '==', 'student').onSnapshot(snap => { document.getElementById('total-students').textContent = snap.size; });
+        db.collection('tests').onSnapshot(snap => { document.getElementById('total-tests').textContent = snap.size; });
+        db.collection('submissions').onSnapshot(snap => { document.getElementById('total-submissions').textContent = snap.size; });
+    }
+    function loadStudents() {
+        const tableBody = document.querySelector('#students-table tbody');
+        db.collection('users').where('role', '==', 'student').onSnapshot(snapshot => {
+            if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No students found.</td></tr>'; return; }
+            let html = '';
+            let count = 1;
+            snapshot.forEach(doc => {
+                const s = doc.data();
+                html += `<tr><td>${count++}</td><td>${s.name}</td><td>${s.register_number || 'N/A'}</td><td>${s.email}</td></tr>`;
+            });
+            tableBody.innerHTML = html;
+        });
+    }
+
+    function loadTests() {
+        const tableBody = document.querySelector('#tests-table tbody');
+        db.collection('tests').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No tests found. Create one!</td></tr>'; return; }
+            let html = '';
+            snapshot.forEach(doc => {
+                const t = doc.data();
+                const startTime = t.startTime ? t.startTime.toDate().toLocaleString() : 'N/A';
+                const endTime = t.endTime ? t.endTime.toDate().toLocaleString() : 'N/A';
+                html += `<tr><td>${t.title}</td><td>${startTime}</td><td>${endTime}</td><td><button class="btn" onclick="viewResults('${doc.id}', '${t.title}')">View Results</button></td></tr>`;
+            });
+            tableBody.innerHTML = html;
+        });
+    }
+
+    window.viewResults = async function(testId, testTitle) {
+        switchView('results-view');
+        document.getElementById('results-test-title').textContent = `Results for: ${testTitle}`;
+        const usersSnap = await db.collection('users').where('role', '==', 'student').get();
+        const allStudents = new Map();
+        usersSnap.forEach(doc => allStudents.set(doc.id, doc.data()));
+
+        const testDoc = await db.collection('tests').doc(testId).get();
+        const testDuration = testDoc.exists ? testDoc.data().duration : 0;
+
+        unsubscribeResults = db.collection('submissions').where('testId', '==', testId).onSnapshot(subsSnap => {
+            const attendedBody = document.querySelector('#attended-table tbody');
+            const notAttendedBody = document.querySelector('#not-attended-table tbody');
+            const attendedStudents = [];
+            subsSnap.forEach(doc => attendedStudents.push({ id: doc.id, ...doc.data() }));
+            attendedStudents.sort((a, b) => b.score - a.score);
+            let attendedHtml = '', notAttendedHtml = '', totalScore = 0;
+            let attendedCount = 1, notAttendedCount = 1;
+            const scoreDistribution = { '0-20%': 0, '21-40%': 0, '41-60%': 0, '61-80%': 0, '81-100%': 0 };
+            const attendedIds = new Set(attendedStudents.map(s => s.userId));
+            attendedStudents.forEach(sub => {
+                const student = allStudents.get(sub.userId);
+                if (student) {
+                    const scorePercent = sub.totalMarks > 0 ? (sub.score / sub.totalMarks) * 100 : 0;
+                    totalScore += scorePercent;
+                    if (scorePercent <= 20) scoreDistribution['0-20%']++; else if (scorePercent <= 40) scoreDistribution['21-40%']++; else if (scorePercent <= 60) scoreDistribution['41-60%']++; else if (scorePercent <= 80) scoreDistribution['61-80%']++; else scoreDistribution['81-100%']++;
+                    const timeTakenMs = sub.endTime.toDate() - sub.startTime.toDate();
+                    const remainingMs = (testDuration * 60 * 1000) - timeTakenMs;
+                    const remainingMins = Math.floor(remainingMs / 60000);
+                    const remainingSecs = Math.round((remainingMs % 60000) / 1000);
+                    const timeRemainingFormatted = remainingMs > 0 ? `${remainingMins}m ${remainingSecs}s` : '0m 0s';
+                    const malpracticeIcon = sub.submissionReason ? `<i class='bx bxs-error-alt malpractice-icon' title='${sub.submissionReason}'></i>` : '';
+                    attendedHtml += `<tr><td>${attendedCount++}</td><td>${student.name}${malpracticeIcon}</td><td>${student.register_number || 'N/A'}</td><td>${sub.score} / ${sub.totalMarks} (${scorePercent.toFixed(1)}%)</td><td>${timeRemainingFormatted}</td></tr>`;
+                }
+            });
+            allStudents.forEach((student, userId) => {
+                if (!attendedIds.has(userId)) {
+                    notAttendedHtml += `<tr><td>${notAttendedCount++}</td><td>${student.name}</td><td>${student.register_number || 'N/A'}</td><td>${student.email}</td></tr>`;
+                }
+            });
+            attendedBody.innerHTML = attendedHtml || '<tr><td colspan="5">No submissions yet.</td></tr>';
+            notAttendedBody.innerHTML = notAttendedHtml || '<tr><td colspan="4">All students have attended.</td></tr>';
+            const completionRate = allStudents.size > 0 ? (attendedIds.size / allStudents.size) * 100 : 0;
+            const avgScore = attendedIds.size > 0 ? totalScore / attendedIds.size : 0;
+            document.getElementById('completion-rate').textContent = `${completionRate.toFixed(1)}%`;
+            document.getElementById('avg-score').textContent = `${avgScore.toFixed(1)}%`;
+            updateScoreChart(scoreDistribution);
+        });
+    }
+    
+    function updateScoreChart(data) {
+        const ctx = document.getElementById('score-chart').getContext('2d');
+        if (scoreChartInstance) scoreChartInstance.destroy();
+        scoreChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: Object.keys(data), datasets: [{ label: '# of Students', data: Object.values(data), backgroundColor: 'rgba(106, 90, 249, 0.5)', borderColor: 'rgba(106, 90, 249, 1)', borderWidth: 1 }] },
+            options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true, plugins: { title: { display: true, text: 'Score Distribution' } } }
+        });
+    }
+
+    function exportToExcel(tableId, filename) {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+    }
+    document.getElementById('export-attended-btn').addEventListener('click', () => exportToExcel('attended-table', 'Attended_Students_Report'));
+    document.getElementById('export-not-attended-btn').addEventListener('click', () => exportToExcel('not-attended-table', 'Not_Attended_Students_Report'));
+    
+    const createTestForm = document.getElementById('create-test-form');
+    createTestForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('test-title').value;
+        const duration = parseInt(document.getElementById('test-duration').value, 10);
+        const file = document.getElementById('question-file').files[0];
+        const startTime = new Date(document.getElementById('start-time').value);
+        const endTime = new Date(document.getElementById('end-time').value);
+        if (!title || !duration || !file || !startTime || !endTime) return alert('Please fill all fields.');
+        if (startTime >= endTime) return alert('End time must be after the start time.');
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const questions = parseQuestionText(event.target.result);
+                if (questions.length === 0) return alert('No valid questions in file.');
+                const testRef = await db.collection('tests').add({ 
+                    title, duration, totalQuestions: questions.length, 
+                    startTime: firebase.firestore.Timestamp.fromDate(startTime),
+                    endTime: firebase.firestore.Timestamp.fromDate(endTime),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+                const batch = db.batch();
+                questions.forEach((q, index) => {
+                    const qRef = db.collection('tests').doc(testRef.id).collection('questions').doc();
+                    batch.set(qRef, { ...q, questionId: qRef.id, questionNumber: index + 1 });
+                });
+                await batch.commit();
+                alert(`Test "${title}" created successfully.`);
+                createTestForm.reset();
+                switchView('tests-view');
+            } catch (error) { alert(`Error: ${error.message}`); }
+        };
+        reader.readAsText(file);
+    });
+
+    // --- UPDATED: Question Parsing Function ---
+    function parseQuestionText(text) {
+        const questions = [];
+        const questionBlocks = text.split('---').filter(b => b.trim());
+
+        for (const block of questionBlocks) {
+            const lines = block.trim().split('\n').filter(l => l.trim());
+            if (lines.length < 2) continue;
+
+            const questionLine = lines.find(l => /^\d+\./.test(l));
+            if (!questionLine) continue;
+            
+            const questionText = questionLine.replace(/^\d+\.\s*/, '').trim();
+            const options = lines.filter(l => /^[a-zA-Z]\)/.test(l)).map(l => l.replace(/^[a-zA-Z]\)\s*/, '').trim());
+            
+            const answerLine = lines.find(l => l.toLowerCase().startsWith('correct answer:'));
+            if (!answerLine || options.length === 0) continue;
+            
+            const correctAnswerText = answerLine.split(':')[1].trim().replace(/^[a-zA-Z]\)\s*/, '').trim();
+
+            if (questionText && correctAnswerText) {
+                questions.push({
+                    questionText: questionText,
+                    options: options,
+                    correctAnswer: correctAnswerText
+                });
+            }
+        }
+        return questions;
+    }
+
+    function initialize() {
+        switchView('dashboard-view');
+        loadDashboardStats();
+        loadTests();
+        loadStudents();
+    }
+    
+    mobileSidebarToggle.addEventListener('click', () => {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+    });
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    });
+
+    initialize();
+});
+</script>
+</body>
+</html>

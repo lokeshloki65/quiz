@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register | AI Academicy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --primary-color: #6a5af9;
+            --primary-color-dark: #5847d8;
+            --card-bg: #ffffff;
+            --text-color: #4a5568;
+            --heading-color: #1a202c;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            background: 
+                linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)),
+                url('https://www.svhec.com/wp-content/uploads/2024/09/banner-scaled.jpg') no-repeat center center;
+            background-size: cover;
+        }
+
+        .auth-wrapper { perspective: 1000px; }
+        
+        /* UPDATED: Increased height to fit all registration fields */
+        .auth-card {
+            width: 800px;
+            min-height: 640px; 
+            position: relative;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .auth-card.is-flipped { transform: rotateY(180deg); }
+
+        .auth-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .auth-face-back { transform: rotateY(180deg); }
+
+        .auth-banner {
+            width: 50%;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-color-dark));
+            color: #fff;
+        }
+        
+        .auth-banner h2 { font-size: 2rem; margin-top: 1rem; }
+        .auth-banner p { margin-top: 0.5rem; font-weight: 300; }
+        .auth-banner .logo { font-size: 4rem; }
+
+        .auth-form-wrapper {
+            width: 50%;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header { text-align: center; margin-bottom: 1rem; }
+        .form-header h1 { font-size: 1.8rem; color: var(--heading-color); }
+        .form-group { margin-bottom: 0.9rem; position: relative; }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            background-color: #fff;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-color); }
+
+        .form-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(15%);
+            color: #94a3b8;
+        }
+        
+        .form-group select + i {
+             transform: translateY(-50%);
+             top: 65%;
+             pointer-events: none;
+        }
+        
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 1rem;
+            border: none;
+            background-color: var(--primary-color);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .submit-btn:hover { background-color: var(--primary-color-dark); transform: translateY(-2px); }
+        .form-footer { text-align: center; margin-top: 1rem; font-size: 0.9rem; }
+        .form-footer a { color: var(--primary-color); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .form-footer a:hover { text-decoration: underline; }
+        
+        @media(max-width: 850px){
+            .auth-card {
+                width: 100%;
+                max-width: 420px;
+                min-height: auto;
+                height: auto;
+                position: static;
+                transform-style: flat;
+            }
+            .auth-wrapper {
+                perspective: none;
+            }
+            .auth-face {
+                position: relative;
+                height: auto;
+                backface-visibility: visible;
+                transform: none !important;
+            }
+            #register-form-container {
+                display: none;
+            }
+            .auth-banner {
+                display: none;
+            }
+            .auth-form-wrapper {
+                width: 100%;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-card" id="auth-card">
+            <div class="auth-face auth-face-front" id="login-form-container">
+                <div class="auth-banner">
+                    <i class='bx bxs-institution logo'></i>
+                    <h2>Welcome Back!</h2>
+                    <p>Enter your details to access your account.</p>
+                </div>
+                <div class="auth-form-wrapper">
+                    <form id="login-form">
+                        <div class="form-header"><h1>Sign In</h1></div>
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <i class='bx bxs-envelope'></i>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <i class='bx bxs-lock-alt'></i>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Login</button>
+                        <div class="form-footer">
+                            <span>Don't have an account? </span><a id="show-register">Register here</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="auth-face auth-face-back" id="register-form-container">
+                 <div class="auth-form-wrapper">
+                     <form id="register-form">
+                        <div class="form-header"><h1>Create Account</h1></div>
+                        <div class="form-group"><label for="register-name">Full Name</label><i class='bx bxs-user'></i><input type="text" id="register-name" required></div>
+                        <div class="form-group"><label for="register-number">Register Number</label><i class='bx bxs-id-card'></i><input type="text" id="register-number" required></div>
+                        <div class="form-group">
+                            <label for="register-class-year">Class & Year</label>
+                            <select id="register-class-year" required>
+                                <option value="" disabled selected>Select your class</option>
+                                <option value="B.Tech AIDS - III Year">B.Tech AIDS - III Year</option>
+                                <option value="B.Tech AIDS - II Year">B.Tech AIDS - II Year</option>
+                                <option value="B.Tech AIDS - I Year">B.Tech AIDS - I Year</option>
+                            </select>
+                             <i class='bx bxs-graduation'></i>
+                        </div>
+                        <div class="form-group"><label for="register-email">Email</label><i class='bx bxs-envelope'></i><input type="email" id="register-email" required></div>
+                        <div class="form-group"><label for="register-password">Password</label><i class='bx bxs-lock-alt'></i><input type="password" id="register-password" required></div>
+                        <button type="submit" class="submit-btn">Register</button>
+                        <div class="form-footer">
+                            <span>Already have an account? </span><a id="show-login">Login here</a>
+                        </div>
+                    </form>
+                </div>
+                 <div class="auth-banner">
+                    <i class='bx bxs-user-plus logo'></i>
+                    <h2>Join Us!</h2>
+                    <p>Create an account to get started.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const firebaseConfig = {
+              apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
+        try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); }
+        catch (e) { console.error('Firebase initialization error', e); }
+        
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        const card = document.getElementById('auth-card');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const loginFormContainer = document.getElementById('login-form-container');
+        const registerFormContainer = document.getElementById('register-form-container');
+
+        showRegisterBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 850) {
+                loginFormContainer.style.display = 'none';
+                registerFormContainer.style.display = 'flex';
+            } else {
+                card.classList.add('is-flipped');
+            }
+        });
+        showLoginBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 850) {
+                registerFormContainer.style.display = 'none';
+                loginFormContainer.style.display = 'flex';
+            } else {
+                card.classList.remove('is-flipped');
+            }
+        });
+        
+        const loginForm = document.getElementById('login-form');
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginForm['login-email'].value;
+            const password = loginForm['login-password'].value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(cred => db.collection('users').doc(cred.user.uid).get())
+                .then(doc => {
+                    if (doc.exists) {
+                        if (doc.data().role === 'admin') {
+                            window.location.href = 'admin.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    } else {
+                        alert('User data not found.');
+                        window.location.href = 'dashboard.html';
+                    }
+                })
+                .catch(err => alert('Login failed: ' + err.message));
+        });
+
+        const registerForm = document.getElementById('register-form');
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = registerForm['register-name'].value;
+            const registerNumber = registerForm['register-number'].value;
+            const classYear = registerForm['register-class-year'].value;
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(cred => {
+                    return db.collection('users').doc(cred.user.uid).set({
+                        name: name,
+                        email: email,
+                        register_number: registerNumber,
+                        class_year: classYear,
+                        role: 'student'
+                    });
+                })
+                .then(() => {
+                    alert('Registration successful! Please log in.');
+                    showLoginBtn.click();
+                })
+                .catch(err => alert('Registration failed: ' + err.message));
+        });
+    });
+    </script>
+</body>
+</html>

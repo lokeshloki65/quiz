@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Solutions | AI Academicy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --primary-color: #6a5af9; --success-color: #28a745; --danger-color: #dc3545;
+            --background-color: #f0f2f5; --card-bg: #ffffff; --text-color: #4a5568;
+            --heading-color: #1a202c; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,.1);
+            --border-radius: 1rem; --correct-bg: #d4edda; --incorrect-bg: #f8d7da;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); }
+        .main-container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        .solution-header { text-align: center; margin-bottom: 2rem; }
+        .solution-header h1 { color: var(--heading-color); }
+        .solution-header p { font-size: 1.1rem; }
+        .question-card { 
+            background: var(--card-bg); border-radius: var(--border-radius); 
+            box-shadow: var(--shadow); margin-bottom: 1.5rem; padding: 1.5rem;
+            border-left: 5px solid transparent;
+        }
+        .question-card.correct { border-left-color: var(--success-color); }
+        .question-card.incorrect { border-left-color: var(--danger-color); }
+
+        .question-title { font-weight: 600; color: var(--heading-color); margin-bottom: 1.5rem; font-size: 1.1rem; }
+        .options-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+        .option { padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        
+        /* UPDATED: Styles for showing answers */
+        .option.correct-answer { background: var(--correct-bg); border-color: var(--success-color); font-weight: 500;}
+        .option.user-choice.incorrect { background: var(--incorrect-bg); border-color: var(--danger-color); }
+        
+        .option i { font-size: 1.2rem; }
+
+        .answer-key { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-color); }
+        .answer-key p { font-weight: 500; }
+        .answer-key .your-answer { color: var(--danger-color); }
+        .answer-key .correct-answer-text { color: var(--success-color); }
+
+        /* UPDATED: Button Style */
+        .back-btn {
+            display: block; width: fit-content; margin: 2rem auto;
+            background: var(--primary-color); color: #fff; text-decoration: none;
+            padding: 0.75rem 2rem; border-radius: 2rem; font-weight: 500;
+            transition: all 0.2s ease; box-shadow: 0 4px 15px -5px rgba(106, 90, 249, 0.6);
+        }
+        .back-btn:hover { transform: translateY(-3px); box-shadow: 0 7px 20px -5px rgba(106, 90, 249, 0.8); }
+
+        #loading-text { text-align: center; font-size: 1.5rem; margin-top: 5rem; }
+    </style>
+</head>
+<body>
+    <div class="main-container" id="main-container" style="display: none;">
+        <div class="solution-header">
+            <h1 id="test-title">Test Solutions</h1>
+            <p>Your Score: <strong id="final-score">0/0</strong></p>
+        </div>
+        <div id="solutions-container"></div>
+        <a href="assessments.html" class="back-btn">Back to Assessments</a>
+    </div>
+    <p id="loading-text">Loading Solutions...</p>
+    
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const firebaseConfig = {
+                apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
+
+
+    try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
+    catch(e) { console.error("Firebase init error", e); }
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const mainContainer = document.getElementById('main-container');
+    const loadingText = document.getElementById('loading-text');
+
+    auth.onAuthStateChanged(async user => {
+        if (user) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const subId = urlParams.get('subId');
+            if (!subId) {
+                loadingText.textContent = 'Error: Submission ID not found.';
+                return;
+            }
+            await loadSolutions(user, subId);
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    async function loadSolutions(user, subId) {
+        try {
+            const subDoc = await db.collection('submissions').doc(subId).get();
+            if (!subDoc.exists || subDoc.data().userId !== user.uid) {
+                throw new Error("Solutions not found or you do not have permission to view them.");
+            }
+            const subData = subDoc.data();
+            const testId = subData.testId;
+            const userAnswers = subData.answers;
+
+            const testDoc = await db.collection('tests').doc(testId).get();
+            const testData = testDoc.data();
+
+            const questionsSnap = await db.collection('tests').doc(testId).collection('questions').orderBy('questionNumber').get();
+            const questions = [];
+            questionsSnap.forEach(doc => questions.push({id: doc.id, ...doc.data()}));
+
+            document.getElementById('test-title').textContent = `Solutions for: ${testData.title}`;
+            document.getElementById('final-score').textContent = `${subData.score} / ${subData.totalMarks}`;
+            
+            const solutionsContainer = document.getElementById('solutions-container');
+            solutionsContainer.innerHTML = '';
+            
+            questions.forEach((q, index) => {
+                const userChoice = userAnswers[q.id] || "Not Answered";
+                const isCorrect = userChoice === q.correctAnswer;
+                
+                let answerKeyHtml = '';
+                // UPDATED: Logic to show both answers if incorrect
+                if (!isCorrect) {
+                    answerKeyHtml = `
+                        <div class="answer-key">
+                            <p class="your-answer"><strong>Your Answer:</strong> ${userChoice}</p>
+                            <p class="correct-answer-text"><strong>Correct Answer:</strong> ${q.correctAnswer}</p>
+                        </div>
+                    `;
+                }
+
+                const questionCard = document.createElement('div');
+                questionCard.className = isCorrect ? 'question-card correct' : 'question-card incorrect';
+                questionCard.innerHTML = `
+                    <p class="question-title">Q${index + 1}: ${q.questionText}</p>
+                    <ul class="options-list">${getOptionsHtml(q, userChoice)}</ul>
+                    ${answerKeyHtml}
+                `;
+                solutionsContainer.appendChild(questionCard);
+            });
+            
+            loadingText.style.display = 'none';
+            mainContainer.style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            loadingText.textContent = `Error: ${error.message}`;
+        }
+    }
+
+    // UPDATED: Helper function to generate options HTML
+    function getOptionsHtml(question, userChoice) {
+        let optionsHtml = '';
+        const isChoiceCorrect = userChoice === question.correctAnswer;
+
+        question.options.forEach(option => {
+            let classes = 'option';
+            let icon = '';
+
+            // If this option is the one the user chose
+            if (option === userChoice) {
+                classes += ' user-choice';
+                if (isChoiceCorrect) {
+                    classes += ' correct-answer'; // Green background for correct choice
+                    icon = `<i class='bx bxs-check-circle' style="color: var(--success-color);"></i>`;
+                } else {
+                    classes += ' incorrect'; // Red background for incorrect choice
+                    icon = `<i class='bx bxs-x-circle' style="color: var(--danger-color);"></i>`;
+                }
+            } 
+            // If this option is the correct one, but the user chose something else
+            else if (option === question.correctAnswer) {
+                classes += ' correct-answer';
+                icon = `<i class='bx bxs-check-circle' style="color: var(--success-color);"></i>`;
+            }
+
+            optionsHtml += `<li class="${classes}">${icon} ${option}</li>`;
+        });
+        return optionsHtml;
+    }
+});
+</script>
+</body>
+</html>

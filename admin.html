@@ -160,235 +160,261 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
-         apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+                      apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
   authDomain: "student-central-hub-5w4l8.firebaseapp.com",
   projectId: "student-central-hub-5w4l8",
   storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
   messagingSenderId: "379433916597",
   appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
 };
+    
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
     catch(e) { console.error("Firebase init error", e); }
-
+    
     const db = firebase.firestore();
-    let scoreChartInstance = null;
-    let unsubscribeResults = null;
-    const navLinks = document.querySelectorAll('.nav-link');
-    const pageTitle = document.getElementById('page-title');
-    const headerActionBtn = document.getElementById('header-action-btn');
-    const sidebar = document.getElementById('sidebar');
-    const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
-    const overlay = document.getElementById('overlay');
-    function switchView(viewId) {
-        document.querySelectorAll('#admin-view > div').forEach(view => view.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('data-view') === viewId));
-        const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'results-view': 'Test Results'};
-        pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
-        headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view') ? 'none' : 'block';
-        headerActionBtn.textContent = '+ Create New Test';
-    }
-    navLinks.forEach(link => {
-        link.addEventListener('click', e => {
-            e.preventDefault();
-            const viewId = e.currentTarget.getAttribute('data-view');
+    const auth = firebase.auth(); // Added Auth
+    
+    // --- NEW: Security Check for Admin Page ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // User is logged in, now check if they are an admin
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if (doc.exists && doc.data().role === 'admin') {
+                    // User is an admin, let them stay.
+                    console.log("Admin access granted.");
+                    // Now we can initialize the rest of the dashboard
+                    initializeAdminPanel(); 
+                } else {
+                    // User is not an admin, redirect them.
+                    alert("Access Denied. You must be an admin to view this page.");
+                    window.location.href = 'login.html';
+                }
+            });
+        } else {
+            // User is not logged in, redirect them.
+            alert("Access Denied. Please log in as an admin.");
+            window.location.href = 'login.html';
+        }
+    });
+
+    // All original code is now inside this function
+    function initializeAdminPanel() {
+        let scoreChartInstance = null;
+        let unsubscribeResults = null;
+        
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageTitle = document.getElementById('page-title');
+        const headerActionBtn = document.getElementById('header-action-btn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+        const overlay = document.getElementById('overlay');
+
+        function switchView(viewId) {
+            document.querySelectorAll('#admin-view > div').forEach(view => view.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('data-view') === viewId));
+            const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'results-view': 'Test Results'};
+            pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
+            headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view') ? 'none' : 'block';
+            headerActionBtn.textContent = '+ Create New Test';
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const viewId = e.currentTarget.getAttribute('data-view');
+                if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
+                switchView(viewId);
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+        });
+
+        headerActionBtn.addEventListener('click', () => switchView('create-test-view'));
+        document.getElementById('cancel-btn').addEventListener('click', () => switchView('tests-view'));
+        document.getElementById('back-to-tests-btn').addEventListener('click', () => {
             if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
-            switchView(viewId);
+            switchView('tests-view');
+        });
+        
+        function loadDashboardStats() {
+            db.collection('users').where('role', '==', 'student').onSnapshot(snap => { document.getElementById('total-students').textContent = snap.size; });
+            db.collection('tests').onSnapshot(snap => { document.getElementById('total-tests').textContent = snap.size; });
+            db.collection('submissions').onSnapshot(snap => { document.getElementById('total-submissions').textContent = snap.size; });
+        }
+
+        function loadStudents() {
+            const tableBody = document.querySelector('#students-table tbody');
+            db.collection('users').where('role', '==', 'student').onSnapshot(snapshot => {
+                if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No students found.</td></tr>'; return; }
+                let html = '';
+                let count = 1;
+                snapshot.forEach(doc => {
+                    const s = doc.data();
+                    html += `<tr><td>${count++}</td><td>${s.name}</td><td>${s.register_number || 'N/A'}</td><td>${s.email}</td></tr>`;
+                });
+                tableBody.innerHTML = html;
+            });
+        }
+
+        function loadTests() {
+            const tableBody = document.querySelector('#tests-table tbody');
+            db.collection('tests').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No tests found. Create one!</td></tr>'; return; }
+                let html = '';
+                snapshot.forEach(doc => {
+                    const t = doc.data();
+                    const startTime = t.startTime ? t.startTime.toDate().toLocaleString() : 'N/A';
+                    const endTime = t.endTime ? t.endTime.toDate().toLocaleString() : 'N/A';
+                    html += `<tr><td>${t.title}</td><td>${startTime}</td><td>${endTime}</td><td><button class="btn" onclick="viewResults('${doc.id}', '${t.title}')">View Results</button></td></tr>`;
+                });
+                tableBody.innerHTML = html;
+            });
+        }
+
+        window.viewResults = async function(testId, testTitle) {
+            switchView('results-view');
+            document.getElementById('results-test-title').textContent = `Results for: ${testTitle}`;
+            const usersSnap = await db.collection('users').where('role', '==', 'student').get();
+            const allStudents = new Map();
+            usersSnap.forEach(doc => allStudents.set(doc.id, doc.data()));
+
+            const testDoc = await db.collection('tests').doc(testId).get();
+            const testDuration = testDoc.exists ? testDoc.data().duration : 0;
+
+            unsubscribeResults = db.collection('submissions').where('testId', '==', testId).onSnapshot(subsSnap => {
+                const attendedBody = document.querySelector('#attended-table tbody');
+                const notAttendedBody = document.querySelector('#not-attended-table tbody');
+                const attendedStudents = [];
+                subsSnap.forEach(doc => attendedStudents.push({ id: doc.id, ...doc.data() }));
+                attendedStudents.sort((a, b) => b.score - a.score);
+                let attendedHtml = '', notAttendedHtml = '', totalScore = 0;
+                let attendedCount = 1, notAttendedCount = 1;
+                const scoreDistribution = { '0-20%': 0, '21-40%': 0, '41-60%': 0, '61-80%': 0, '81-100%': 0 };
+                const attendedIds = new Set(attendedStudents.map(s => s.userId));
+                attendedStudents.forEach(sub => {
+                    const student = allStudents.get(sub.userId);
+                    if (student) {
+                        const scorePercent = sub.totalMarks > 0 ? (sub.score / sub.totalMarks) * 100 : 0;
+                        totalScore += scorePercent;
+                        if (scorePercent <= 20) scoreDistribution['0-20%']++; else if (scorePercent <= 40) scoreDistribution['21-40%']++; else if (scorePercent <= 60) scoreDistribution['41-60%']++; else if (scorePercent <= 80) scoreDistribution['61-80%']++; else scoreDistribution['81-100%']++;
+                        const timeTakenMs = sub.endTime.toDate() - sub.startTime.toDate();
+                        const remainingMs = (testDuration * 60 * 1000) - timeTakenMs;
+                        const remainingMins = Math.floor(remainingMs / 60000);
+                        const remainingSecs = Math.round((remainingMs % 60000) / 1000);
+                        const timeRemainingFormatted = remainingMs > 0 ? `${remainingMins}m ${remainingSecs}s` : '0m 0s';
+                        const malpracticeIcon = sub.submissionReason ? `<i class='bx bxs-error-alt malpractice-icon' title='${sub.submissionReason}'></i>` : '';
+                        attendedHtml += `<tr><td>${attendedCount++}</td><td>${student.name}${malpracticeIcon}</td><td>${student.register_number || 'N/A'}</td><td>${sub.score} / ${sub.totalMarks} (${scorePercent.toFixed(1)}%)</td><td>${timeRemainingFormatted}</td></tr>`;
+                    }
+                });
+                allStudents.forEach((student, userId) => {
+                    if (!attendedIds.has(userId)) {
+                        notAttendedHtml += `<tr><td>${notAttendedCount++}</td><td>${student.name}</td><td>${student.register_number || 'N/A'}</td><td>${student.email}</td></tr>`;
+                    }
+                });
+                attendedBody.innerHTML = attendedHtml || '<tr><td colspan="5">No submissions yet.</td></tr>';
+                notAttendedBody.innerHTML = notAttendedHtml || '<tr><td colspan="4">All students have attended.</td></tr>';
+                const completionRate = allStudents.size > 0 ? (attendedIds.size / allStudents.size) * 100 : 0;
+                const avgScore = attendedIds.size > 0 ? totalScore / attendedIds.size : 0;
+                document.getElementById('completion-rate').textContent = `${completionRate.toFixed(1)}%`;
+                document.getElementById('avg-score').textContent = `${avgScore.toFixed(1)}%`;
+                updateScoreChart(scoreDistribution);
+            });
+        }
+        
+        function updateScoreChart(data) {
+            const ctx = document.getElementById('score-chart').getContext('2d');
+            if (scoreChartInstance) scoreChartInstance.destroy();
+            scoreChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: Object.keys(data), datasets: [{ label: '# of Students', data: Object.values(data), backgroundColor: 'rgba(106, 90, 249, 0.5)', borderColor: 'rgba(106, 90, 249, 1)', borderWidth: 1 }] },
+                options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true, plugins: { title: { display: true, text: 'Score Distribution' } } }
+            });
+        }
+
+        function exportToExcel(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+        }
+        document.getElementById('export-attended-btn').addEventListener('click', () => exportToExcel('attended-table', 'Attended_Students_Report'));
+        document.getElementById('export-not-attended-btn').addEventListener('click', () => exportToExcel('not-attended-table', 'Not_Attended_Students_Report'));
+        
+        const createTestForm = document.getElementById('create-test-form');
+        createTestForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('test-title').value;
+            const duration = parseInt(document.getElementById('test-duration').value, 10);
+            const file = document.getElementById('question-file').files[0];
+            const startTime = new Date(document.getElementById('start-time').value);
+            const endTime = new Date(document.getElementById('end-time').value);
+            if (!title || !duration || !file || !startTime || !endTime) return alert('Please fill all fields.');
+            if (startTime >= endTime) return alert('End time must be after the start time.');
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const questions = parseQuestionText(event.target.result);
+                    if (questions.length === 0) return alert('No valid questions in file.');
+                    const testRef = await db.collection('tests').add({ 
+                        title, duration, totalQuestions: questions.length, 
+                        startTime: firebase.firestore.Timestamp.fromDate(startTime),
+                        endTime: firebase.firestore.Timestamp.fromDate(endTime),
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                    });
+                    const batch = db.batch();
+                    questions.forEach((q, index) => {
+                        const qRef = db.collection('tests').doc(testRef.id).collection('questions').doc();
+                        batch.set(qRef, { ...q, questionId: qRef.id, questionNumber: index + 1 });
+                    });
+                    await batch.commit();
+                    alert(`Test "${title}" created successfully.`);
+                    createTestForm.reset();
+                    switchView('tests-view');
+                } catch (error) { alert(`Error: ${error.message}`); }
+            };
+            reader.readAsText(file);
+        });
+
+        function parseQuestionText(text) {
+            const questions = [];
+            const questionBlocks = text.split('---').filter(b => b.trim());
+            for (const block of questionBlocks) {
+                const lines = block.trim().split('\n').filter(l => l.trim());
+                if (lines.length < 2) continue;
+                const questionLine = lines.find(l => /^\d+\./.test(l));
+                if (!questionLine) continue;
+                const questionText = questionLine.replace(/^\d+\.\s*/, '').trim();
+                const options = lines.filter(l => /^[a-zA-Z]\)/.test(l)).map(l => l.trim());
+                const answerLine = lines.find(l => l.toLowerCase().startsWith('correct answer:'));
+                if (!answerLine || options.length === 0) continue;
+                const correctAnswerFull = answerLine.split(':')[1].trim();
+                const cleanedOptions = options.map(opt => opt.replace(/^[a-zA-Z]\)\s*/, '').trim());
+                const correctAnswerText = correctAnswerFull.replace(/^[a-zA-Z]\)\s*/, '').trim();
+                if (questionText && correctAnswerText) {
+                    questions.push({
+                        questionText: questionText,
+                        options: cleanedOptions,
+                        correctAnswer: correctAnswerText
+                    });
+                }
+            }
+            return questions;
+        }
+
+        mobileSidebarToggle.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        });
+        overlay.addEventListener('click', () => {
             sidebar.classList.remove('open');
             overlay.classList.remove('active');
         });
-    });
-    headerActionBtn.addEventListener('click', () => switchView('create-test-view'));
-    document.getElementById('cancel-btn').addEventListener('click', () => switchView('tests-view'));
-    document.getElementById('back-to-tests-btn').addEventListener('click', () => {
-        if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
-        switchView('tests-view');
-    });
-    function loadDashboardStats() {
-        db.collection('users').where('role', '==', 'student').onSnapshot(snap => { document.getElementById('total-students').textContent = snap.size; });
-        db.collection('tests').onSnapshot(snap => { document.getElementById('total-tests').textContent = snap.size; });
-        db.collection('submissions').onSnapshot(snap => { document.getElementById('total-submissions').textContent = snap.size; });
-    }
-    function loadStudents() {
-        const tableBody = document.querySelector('#students-table tbody');
-        db.collection('users').where('role', '==', 'student').onSnapshot(snapshot => {
-            if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No students found.</td></tr>'; return; }
-            let html = '';
-            let count = 1;
-            snapshot.forEach(doc => {
-                const s = doc.data();
-                html += `<tr><td>${count++}</td><td>${s.name}</td><td>${s.register_number || 'N/A'}</td><td>${s.email}</td></tr>`;
-            });
-            tableBody.innerHTML = html;
-        });
-    }
 
-    function loadTests() {
-        const tableBody = document.querySelector('#tests-table tbody');
-        db.collection('tests').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No tests found. Create one!</td></tr>'; return; }
-            let html = '';
-            snapshot.forEach(doc => {
-                const t = doc.data();
-                const startTime = t.startTime ? t.startTime.toDate().toLocaleString() : 'N/A';
-                const endTime = t.endTime ? t.endTime.toDate().toLocaleString() : 'N/A';
-                html += `<tr><td>${t.title}</td><td>${startTime}</td><td>${endTime}</td><td><button class="btn" onclick="viewResults('${doc.id}', '${t.title}')">View Results</button></td></tr>`;
-            });
-            tableBody.innerHTML = html;
-        });
-    }
-
-    window.viewResults = async function(testId, testTitle) {
-        switchView('results-view');
-        document.getElementById('results-test-title').textContent = `Results for: ${testTitle}`;
-        const usersSnap = await db.collection('users').where('role', '==', 'student').get();
-        const allStudents = new Map();
-        usersSnap.forEach(doc => allStudents.set(doc.id, doc.data()));
-
-        const testDoc = await db.collection('tests').doc(testId).get();
-        const testDuration = testDoc.exists ? testDoc.data().duration : 0;
-
-        unsubscribeResults = db.collection('submissions').where('testId', '==', testId).onSnapshot(subsSnap => {
-            const attendedBody = document.querySelector('#attended-table tbody');
-            const notAttendedBody = document.querySelector('#not-attended-table tbody');
-            const attendedStudents = [];
-            subsSnap.forEach(doc => attendedStudents.push({ id: doc.id, ...doc.data() }));
-            attendedStudents.sort((a, b) => b.score - a.score);
-            let attendedHtml = '', notAttendedHtml = '', totalScore = 0;
-            let attendedCount = 1, notAttendedCount = 1;
-            const scoreDistribution = { '0-20%': 0, '21-40%': 0, '41-60%': 0, '61-80%': 0, '81-100%': 0 };
-            const attendedIds = new Set(attendedStudents.map(s => s.userId));
-            attendedStudents.forEach(sub => {
-                const student = allStudents.get(sub.userId);
-                if (student) {
-                    const scorePercent = sub.totalMarks > 0 ? (sub.score / sub.totalMarks) * 100 : 0;
-                    totalScore += scorePercent;
-                    if (scorePercent <= 20) scoreDistribution['0-20%']++; else if (scorePercent <= 40) scoreDistribution['21-40%']++; else if (scorePercent <= 60) scoreDistribution['41-60%']++; else if (scorePercent <= 80) scoreDistribution['61-80%']++; else scoreDistribution['81-100%']++;
-                    const timeTakenMs = sub.endTime.toDate() - sub.startTime.toDate();
-                    const remainingMs = (testDuration * 60 * 1000) - timeTakenMs;
-                    const remainingMins = Math.floor(remainingMs / 60000);
-                    const remainingSecs = Math.round((remainingMs % 60000) / 1000);
-                    const timeRemainingFormatted = remainingMs > 0 ? `${remainingMins}m ${remainingSecs}s` : '0m 0s';
-                    const malpracticeIcon = sub.submissionReason ? `<i class='bx bxs-error-alt malpractice-icon' title='${sub.submissionReason}'></i>` : '';
-                    attendedHtml += `<tr><td>${attendedCount++}</td><td>${student.name}${malpracticeIcon}</td><td>${student.register_number || 'N/A'}</td><td>${sub.score} / ${sub.totalMarks} (${scorePercent.toFixed(1)}%)</td><td>${timeRemainingFormatted}</td></tr>`;
-                }
-            });
-            allStudents.forEach((student, userId) => {
-                if (!attendedIds.has(userId)) {
-                    notAttendedHtml += `<tr><td>${notAttendedCount++}</td><td>${student.name}</td><td>${student.register_number || 'N/A'}</td><td>${student.email}</td></tr>`;
-                }
-            });
-            attendedBody.innerHTML = attendedHtml || '<tr><td colspan="5">No submissions yet.</td></tr>';
-            notAttendedBody.innerHTML = notAttendedHtml || '<tr><td colspan="4">All students have attended.</td></tr>';
-            const completionRate = allStudents.size > 0 ? (attendedIds.size / allStudents.size) * 100 : 0;
-            const avgScore = attendedIds.size > 0 ? totalScore / attendedIds.size : 0;
-            document.getElementById('completion-rate').textContent = `${completionRate.toFixed(1)}%`;
-            document.getElementById('avg-score').textContent = `${avgScore.toFixed(1)}%`;
-            updateScoreChart(scoreDistribution);
-        });
-    }
-    
-    function updateScoreChart(data) {
-        const ctx = document.getElementById('score-chart').getContext('2d');
-        if (scoreChartInstance) scoreChartInstance.destroy();
-        scoreChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: Object.keys(data), datasets: [{ label: '# of Students', data: Object.values(data), backgroundColor: 'rgba(106, 90, 249, 0.5)', borderColor: 'rgba(106, 90, 249, 1)', borderWidth: 1 }] },
-            options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true, plugins: { title: { display: true, text: 'Score Distribution' } } }
-        });
-    }
-
-    function exportToExcel(tableId, filename) {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-        XLSX.writeFile(wb, `${filename}.xlsx`);
-    }
-    document.getElementById('export-attended-btn').addEventListener('click', () => exportToExcel('attended-table', 'Attended_Students_Report'));
-    document.getElementById('export-not-attended-btn').addEventListener('click', () => exportToExcel('not-attended-table', 'Not_Attended_Students_Report'));
-    
-    const createTestForm = document.getElementById('create-test-form');
-    createTestForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const title = document.getElementById('test-title').value;
-        const duration = parseInt(document.getElementById('test-duration').value, 10);
-        const file = document.getElementById('question-file').files[0];
-        const startTime = new Date(document.getElementById('start-time').value);
-        const endTime = new Date(document.getElementById('end-time').value);
-        if (!title || !duration || !file || !startTime || !endTime) return alert('Please fill all fields.');
-        if (startTime >= endTime) return alert('End time must be after the start time.');
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            try {
-                const questions = parseQuestionText(event.target.result);
-                if (questions.length === 0) return alert('No valid questions in file.');
-                const testRef = await db.collection('tests').add({ 
-                    title, duration, totalQuestions: questions.length, 
-                    startTime: firebase.firestore.Timestamp.fromDate(startTime),
-                    endTime: firebase.firestore.Timestamp.fromDate(endTime),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-                });
-                const batch = db.batch();
-                questions.forEach((q, index) => {
-                    const qRef = db.collection('tests').doc(testRef.id).collection('questions').doc();
-                    batch.set(qRef, { ...q, questionId: qRef.id, questionNumber: index + 1 });
-                });
-                await batch.commit();
-                alert(`Test "${title}" created successfully.`);
-                createTestForm.reset();
-                switchView('tests-view');
-            } catch (error) { alert(`Error: ${error.message}`); }
-        };
-        reader.readAsText(file);
-    });
-
-    // --- UPDATED: Question Parsing Function ---
-    function parseQuestionText(text) {
-        const questions = [];
-        const questionBlocks = text.split('---').filter(b => b.trim());
-
-        for (const block of questionBlocks) {
-            const lines = block.trim().split('\n').filter(l => l.trim());
-            if (lines.length < 2) continue;
-
-            const questionLine = lines.find(l => /^\d+\./.test(l));
-            if (!questionLine) continue;
-            
-            const questionText = questionLine.replace(/^\d+\.\s*/, '').trim();
-            const options = lines.filter(l => /^[a-zA-Z]\)/.test(l)).map(l => l.replace(/^[a-zA-Z]\)\s*/, '').trim());
-            
-            const answerLine = lines.find(l => l.toLowerCase().startsWith('correct answer:'));
-            if (!answerLine || options.length === 0) continue;
-            
-            const correctAnswerText = answerLine.split(':')[1].trim().replace(/^[a-zA-Z]\)\s*/, '').trim();
-
-            if (questionText && correctAnswerText) {
-                questions.push({
-                    questionText: questionText,
-                    options: options,
-                    correctAnswer: correctAnswerText
-                });
-            }
-        }
-        return questions;
-    }
-
-    function initialize() {
-        switchView('dashboard-view');
+        // Initial Load
         loadDashboardStats();
         loadTests();
         loadStudents();
     }
-    
-    mobileSidebarToggle.addEventListener('click', () => {
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-    });
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-    });
-
-    initialize();
 });
 </script>
 </body>

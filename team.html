@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Team - Code Crafters</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --primary-color: #6a5af9;
+            --primary-color-light: #e9e6ff;
+            --background-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #4a5568;
+            --heading-color: #1a202c;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+            --border-radius: 1rem;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .back-to-dashboard {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            animation: fadeIn 1s ease-out;
+        }
+        .back-to-dashboard:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .page-header {
+            text-align: center;
+            margin-top: 4rem; /* Space for back button */
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        .page-header h1 {
+            font-size: 2.8rem;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            max-width: 600px;
+        }
+
+        .team-container, .mentor-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .member-card, .mentor-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0; /* Initially hidden for animation */
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        .member-card:hover, .mentor-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Staggered animation delay */
+        .member-card:nth-child(1) { animation-delay: 0.2s; }
+        .member-card:nth-child(2) { animation-delay: 0.3s; }
+        .member-card:nth-child(3) { animation-delay: 0.4s; }
+        .member-card:nth-child(4) { animation-delay: 0.5s; }
+        .mentor-card:nth-child(1) { animation-delay: 0.2s; }
+        .mentor-card:nth-child(2) { animation-delay: 0.3s; }
+
+
+        .member-img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid var(--primary-color-light);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        .member-card:hover .member-img {
+            transform: scale(1.05);
+        }
+
+        .member-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .member-designation {
+            font-size: 1rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .portfolio-btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .portfolio-btn:hover {
+            background-color: #5847d8;
+            transform: scale(1.05);
+        }
+        
+        .section-title {
+            width: 100%;
+            text-align: center;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            color: var(--heading-color);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="dashboard.html" class="back-to-dashboard">
+        <i class='bx bx-arrow-back'></i>
+        <span>Back to Dashboard</span>
+    </a>
+
+    <header class="page-header">
+        <h1>Meet the Code Crafters</h1>
+        <p>A passionate team of student developers dedicated to building innovative and user-friendly solutions.</p>
+    </header>
+
+    <main class="team-container">
+        <div class="member-card">
+            <img src="https://i.pinimg.com/1200x/4f/33/80/4f33809fd4af15a7402f9f6c38562511.jpg" alt="Lokesh" class="member-img">
+            <h3 class="member-name">Lokesh M</h3>
+            <a href="https://lokeshloki.site" target="_blank" rel="noopener noreferrer" class="portfolio-btn">View Portfolio</a>
+        </div>
+
+        <div class="member-card">
+            <img src="https://i.pinimg.com/1200x/e8/1f/e6/e81fe6a30963e568b47d29a58648793a.jpg" alt="Karthick" class="member-img">
+            <h3 class="member-name">KarthickKumar S</h3>
+            <a href="https://karthick.site" target="_blank" rel="noopener noreferrer" class="portfolio-btn">View Portfolio</a>
+        </div>
+
+        <div class="member-card">
+            <img src="https://i.pinimg.com/1200x/9d/57/6a/9d576ad8e77d4c85163cfab87697c877.jpg" alt="Sarjan" class="member-img">
+            <h3 class="member-name">Sarjan</h3>
+            <a href="https://sarjan.site" target="_blank" rel="noopener noreferrer" class="portfolio-btn">View Portfolio</a>
+        </div>
+
+        <div class="member-card">
+            <img src="https://i.pinimg.com/1200x/e2/13/5d/e2135d9d2bf74f9e7f0f6fced12a9d08.jpg" alt="Nishanth" class="member-img">
+            <h3 class="member-name">Nishanth</h3>
+            <a href="https://nishanthk.site" target="_blank" rel="noopener noreferrer" class="portfolio-btn">View Portfolio</a>
+        </div>
+    </main>
+
+    <h2 class="section-title">Our Mentors</h2>
+    <section class="mentor-container">
+         <div class="mentor-card">
+            <img src="https://www.svhec.com/wp-content/uploads/2024/09/Principal-new-scaled.jpg" alt="Dr. Thangavelu" class="member-img">
+            <h3 class="member-name">Dr. Thangavelu</h3>
+            <p class="member-designation">Principal</p>
+        </div>
+        <div class="mentor-card">
+            <img src="https://i.pinimg.com/736x/29/1e/40/291e40e1f1c42b7b277c863977156125.jpg" alt="Dr. Senthil Prakash" class="member-img">
+            <h3 class="member-name">Dr. Senthil Prakash</h3>
+            <p class="member-designation">Head of Department</p>
+        </div>
+    </section>
+
+</body>
+</html>

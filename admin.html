@@ -32,8 +32,9 @@
         .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
         .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: var(--transition-speed); display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
         .btn-primary { background-color: var(--primary-color); color: #fff; }
-        .btn-primary:hover { background-color: #6a5af9; }
+        .btn-primary:hover:not(:disabled) { background-color: #6a5af9; }
         .btn-secondary { background-color: #6c757d; color: #fff; }
         .btn-success { background-color: var(--success-color); color:#fff; }
         .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.3rem; border-radius: 50%; }
@@ -71,6 +72,10 @@
         .overlay { display: none; }
         #download-sample-btn { color: var(--primary-color); text-decoration: none; font-weight: 500; }
         #download-sample-btn:hover { text-decoration: underline; }
+        .import-section { border: 2px dashed var(--border-color); border-radius: var(--border-radius); padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; }
+        .import-section h4 { color: var(--heading-color); }
+        .import-section p { font-size: 0.9rem; margin-bottom: 1rem; }
+        #import-status { margin-top: 1rem; font-weight: 500; }
         @media (max-width: 992px) {
             .sidebar { position: fixed; left: -260px; height: 100%; }
             .sidebar.open { left: 0; }
@@ -151,7 +156,7 @@
                 <div class="card">
                     <div class="results-header"><h3>Attended Students</h3><button class="btn btn-success" id="export-attended-btn">Export to Excel</button></div>
                     <table id="attended-table">
-                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Score</th><th>Time Remaining</th></tr></thead>
+                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Score</th><th>Email</th><th>Time Taken</th><th>Time Remaining</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -165,10 +170,18 @@
             </div>
             <div id="students-view">
                 <div class="card">
+                    <div class="import-section">
+                        <h4>Import Students from Excel</h4>
+                        <p>Upload an .xlsx file with columns: <strong>Name, RegisterNumber, Year, Email, Password</strong></p>
+                        <input type="file" id="student-import-file" accept=".xlsx, .xls" style="margin-bottom: 10px;">
+                        <button class="btn btn-success" id="import-students-btn">
+                            <i class='bx bx-upload'></i> Import Students
+                        </button>
+                        <div id="import-status"></div>
+                    </div>
                     <h3>All Students</h3>
-                    <p>Add new students manually using the Firebase Console. This list will update in real-time.</p>
                     <table id="students-table">
-                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Email</th></tr></thead>
+                        <thead><tr><th>S.No</th><th>Name</th><th>Register No.</th><th>Year</th><th>Email</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -229,7 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
         function switchView(viewId) {
             document.querySelectorAll('#admin-view > div').forEach(view => view.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('data-view') === viewId));
+            navLinks.forEach(link => {
+                const linkView = link.getAttribute('data-view');
+                if (linkView) {
+                    link.classList.toggle('active', linkView === viewId);
+                }
+            });
             const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'results-view': 'Test Results'};
             pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
             headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view') ? 'none' : 'block';
@@ -243,13 +261,15 @@ document.addEventListener('DOMContentLoaded', () => {
         navLinks.forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
-                const viewId = e.currentTarget.getAttribute('data-view');
                 if (e.currentTarget.href.includes('leaderboard.html')) {
                     window.location.href = 'leaderboard.html';
                     return;
                 }
-                if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
-                switchView(viewId);
+                const viewId = e.currentTarget.getAttribute('data-view');
+                if (viewId) {
+                    if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
+                    switchView(viewId);
+                }
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
             });
@@ -269,37 +289,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function loadSubmissionsChart() {
-            const days = 14; // Show data for the last 14 days
+            const days = 14;
             const endDate = new Date();
             const startDate = new Date();
             startDate.setDate(endDate.getDate() - (days - 1));
+            startDate.setHours(0, 0, 0, 0);
 
             const dateMap = new Map();
             for (let i = 0; i < days; i++) {
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
-                const dateString = date.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                const dateString = date.toLocaleDateString('en-CA');
                 dateMap.set(dateString, 0);
             }
 
             const firestoreStartDate = firebase.firestore.Timestamp.fromDate(startDate);
             
-            db.collection('submissions')
-              .where('startTime', '>=', firestoreStartDate)
-              .onSnapshot(snap => {
-                const submissionsCount = new Map(dateMap); // Reset counts on each snapshot
+            db.collection('submissions').where('startTime', '>=', firestoreStartDate).onSnapshot(snap => {
+                const submissionsCount = new Map(dateMap);
                 snap.forEach(doc => {
                     const date = doc.data().startTime.toDate().toLocaleDateString('en-CA');
                     if (submissionsCount.has(date)) {
                         submissionsCount.set(date, submissionsCount.get(date) + 1);
                     }
                 });
-                
                 const labels = Array.from(submissionsCount.keys()).map(dateStr => new Date(dateStr).toLocaleDateString('en-GB', { month: 'short', day: 'numeric'}));
                 const data = Array.from(submissionsCount.values());
-                
                 updateSubmissionsChart({ labels, data });
-            });
+            }, error => console.error("Error fetching submissions for chart:", error));
         }
         
         function updateSubmissionsChart({ labels, data }) {
@@ -310,16 +327,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: { 
                     labels: labels, 
                     datasets: [{ 
-                        label: 'Submissions per Day', 
-                        data: data, 
-                        backgroundColor: 'rgba(123, 104, 238, 0.1)', 
-                        borderColor: 'rgba(123, 104, 238, 1)', 
-                        borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: 'rgba(123, 104, 238, 1)',
+                        label: 'Submissions per Day', data: data, backgroundColor: 'rgba(123, 104, 238, 0.1)', 
+                        borderColor: 'rgba(123, 104, 238, 1)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: 'rgba(123, 104, 238, 1)',
                     }] 
                 },
                 options: { 
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, 
-                    responsive: true, 
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, responsive: true, 
                     plugins: { title: { display: true, text: 'Submissions Over Last 14 Days', font: { size: 16 } } } 
                 }
             });
@@ -327,15 +340,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function loadStudents() {
             const tableBody = document.querySelector('#students-table tbody');
-            db.collection('users').where('role', '==', 'student').onSnapshot(snapshot => {
-                if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No students found.</td></tr>'; return; }
+            db.collection('users').where('role', '==', 'student').orderBy('register_number', 'asc')
+              .onSnapshot(snapshot => {
+                if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="5">No students found. Import students to get started.</td></tr>'; return; }
                 let html = '';
                 let count = 1;
                 snapshot.forEach(doc => {
                     const s = doc.data();
-                    html += `<tr><td>${count++}</td><td>${s.name}</td><td>${s.register_number || 'N/A'}</td><td>${s.email}</td></tr>`;
+                    html += `<tr><td>${count++}</td><td>${s.name}</td><td>${s.register_number || 'N/A'}</td><td>${s.year || 'N/A'}</td><td>${s.email}</td></tr>`;
                 });
                 tableBody.innerHTML = html;
+            }, error => {
+                console.error("Error fetching students: ", error);
+                tableBody.innerHTML = `<tr><td colspan="5" style="color:var(--danger-color); text-align:center;">Error loading students. You might need to create a Firestore index. Check the browser console (F12) for a direct link to create it.</td></tr>`;
             });
         }
 
@@ -349,25 +366,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const now = new Date();
                     const startTime = t.startTime ? t.startTime.toDate() : null;
                     const endTime = t.endTime ? t.endTime.toDate() : null;
-                    
                     let status = 'Expired', statusClass = 'status-expired';
                     if (startTime && endTime) {
                         if (now < startTime) { status = 'Upcoming'; statusClass = 'status-upcoming'; }
                         else if (now >= startTime && now <= endTime) { status = 'Live'; statusClass = 'status-live'; }
                     }
-
                     const formattedStartTime = startTime ? startTime.toLocaleString() : 'N/A';
                     const formattedEndTime = endTime ? endTime.toLocaleString() : 'N/A';
-                    
-                    html += `<tr>
-                        <td>${t.title}</td> <td>${formattedStartTime}</td> <td>${formattedEndTime}</td>
-                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                    html += `<tr><td>${t.title}</td><td>${formattedStartTime}</td><td>${formattedEndTime}</td><td><span class="status-badge ${statusClass}">${status}</span></td>
                         <td>
                             <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="viewResults('${doc.id}', '${t.title.replace(/'/g, "\\'")}')">Results</button>
                             <button class="action-btn btn-edit" title="Edit Test" onclick="editTest('${doc.id}')"><i class='bx bxs-edit'></i></button>
                             <button class="action-btn btn-delete" title="Delete Test" onclick="deleteTest('${doc.id}')"><i class='bx bxs-trash'></i></button>
-                        </td>
-                    </tr>`;
+                        </td></tr>`;
                 });
                 tableBody.innerHTML = html;
             });
@@ -378,10 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await db.collection('tests').doc(testId).delete();
                     alert('Test deleted successfully.');
-                } catch (error) {
-                    console.error("Error deleting test: ", error);
-                    alert('Failed to delete test. See console for details.');
-                }
+                } catch (error) { console.error("Error deleting test: ", error); alert('Failed to delete test.'); }
             }
         };
         
@@ -389,96 +397,164 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const testDoc = await db.collection('tests').doc(testId).get();
                 if (!testDoc.exists) return alert('Test not found.');
-
                 const testData = testDoc.data();
                 switchView('create-test-view');
-                
                 pageTitle.textContent = "Edit Test";
                 document.getElementById('edit-test-id').value = testId;
                 document.getElementById('test-title').value = testData.title;
                 document.getElementById('test-duration').value = testData.duration;
-                
                 const toLocalISOString = date => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-
                 if (testData.startTime) document.getElementById('start-time').value = toLocalISOString(testData.startTime.toDate());
                 if (testData.endTime) document.getElementById('end-time').value = toLocalISOString(testData.endTime.toDate());
-                
                 document.getElementById('save-test-btn').textContent = "Save Changes";
                 document.getElementById('question-file-group').style.display = 'none';
-            } catch (error) {
-                console.error("Error fetching test for edit:", error);
-                alert("Could not load test data for editing.");
-            }
+            } catch (error) { console.error("Error fetching test for edit:", error); alert("Could not load test data."); }
         };
 
+        // --- MODIFIED RESULTS VIEW LOGIC ---
         window.viewResults = async function(testId, testTitle) {
             switchView('results-view');
-            document.getElementById('results-test-title').textContent = `Results for: ${testTitle}`;
-            const usersSnap = await db.collection('users').where('role', '==', 'student').get();
-            const allStudents = new Map();
-            usersSnap.forEach(doc => allStudents.set(doc.id, doc.data()));
+            document.getElementById('results-test-title').textContent = testTitle;
+            const attendedBody = document.getElementById('attended-table').querySelector('tbody');
+            const notAttendedBody = document.getElementById('not-attended-table').querySelector('tbody');
+            attendedBody.innerHTML = `<tr><td colspan="7">Loading results...</td></tr>`;
+            notAttendedBody.innerHTML = `<tr><td colspan="4">Loading...</td></tr>`;
 
-            const testDoc = await db.collection('tests').doc(testId).get();
-            const testDuration = testDoc.exists ? testDoc.data().duration : 0;
+            try {
+                const [studentsSnapshot, testDoc] = await Promise.all([
+                    db.collection('users').where('role', '==', 'student').get(),
+                    db.collection('tests').doc(testId).get()
+                ]);
+                
+                const allStudents = new Map();
+                studentsSnapshot.forEach(doc => allStudents.set(doc.id, doc.data()));
+                
+                const testDurationInMinutes = testDoc.exists ? testDoc.data().duration : 0;
 
-            unsubscribeResults = db.collection('submissions').where('testId', '==', testId).onSnapshot(subsSnap => {
-                const attendedBody = document.querySelector('#attended-table tbody');
-                const notAttendedBody = document.querySelector('#not-attended-table tbody');
-                const attendedStudents = [];
-                subsSnap.forEach(doc => attendedStudents.push({ id: doc.id, ...doc.data() }));
-                attendedStudents.sort((a, b) => b.score - a.score);
-                let attendedHtml = '', notAttendedHtml = '', totalScore = 0;
-                let attendedCount = 1, notAttendedCount = 1;
-                const scoreDistribution = { '0-20%': 0, '21-40%': 0, '41-60%': 0, '61-80%': 0, '81-100%': 0 };
-                const attendedIds = new Set(attendedStudents.map(s => s.userId));
-                attendedStudents.forEach(sub => {
-                    const student = allStudents.get(sub.userId);
-                    if (student) {
-                        const scorePercent = sub.totalMarks > 0 ? (sub.score / sub.totalMarks) * 100 : 0;
-                        totalScore += scorePercent;
-                        if (scorePercent <= 20) scoreDistribution['0-20%']++; else if (scorePercent <= 40) scoreDistribution['21-40%']++; else if (scorePercent <= 60) scoreDistribution['41-60%']++; else if (scorePercent <= 80) scoreDistribution['61-80%']++; else scoreDistribution['81-100%']++;
-                        const timeTakenMs = sub.endTime.toDate() - sub.startTime.toDate();
-                        const remainingMs = (testDuration * 60 * 1000) - timeTakenMs;
-                        const remainingMins = Math.floor(remainingMs / 60000);
-                        const remainingSecs = Math.round((remainingMs % 60000) / 1000);
-                        const timeRemainingFormatted = remainingMs > 0 ? `${remainingMins}m ${remainingSecs}s` : '0m 0s';
-                        const malpracticeIcon = sub.submissionReason ? `<i class='bx bxs-error-alt malpractice-icon' title='${sub.submissionReason}'></i>` : '';
-                        attendedHtml += `<tr><td>${attendedCount++}</td><td>${student.name}${malpracticeIcon}</td><td>${student.register_number || 'N/A'}</td><td>${sub.score} / ${sub.totalMarks} (${scorePercent.toFixed(1)}%)</td><td>${timeRemainingFormatted}</td></tr>`;
-                    }
-                });
-                allStudents.forEach((student, userId) => {
-                    if (!attendedIds.has(userId)) {
-                        notAttendedHtml += `<tr><td>${notAttendedCount++}</td><td>${student.name}</td><td>${student.register_number || 'N/A'}</td><td>${student.email}</td></tr>`;
-                    }
-                });
-                attendedBody.innerHTML = attendedHtml || '<tr><td colspan="5">No submissions yet.</td></tr>';
-                notAttendedBody.innerHTML = notAttendedHtml || '<tr><td colspan="4">All students have attended.</td></tr>';
-                const completionRate = allStudents.size > 0 ? (attendedIds.size / allStudents.size) * 100 : 0;
-                const avgScore = attendedIds.size > 0 ? totalScore / attendedIds.size : 0;
-                document.getElementById('completion-rate').textContent = `${completionRate.toFixed(1)}%`;
-                document.getElementById('avg-score').textContent = `${avgScore.toFixed(1)}%`;
-                updateScoreChart(scoreDistribution);
-            });
-        }
+                if (unsubscribeResults) unsubscribeResults();
+
+                unsubscribeResults = db.collection('submissions').where('testId', '==', testId)
+                    .onSnapshot(subsSnapshot => {
+                        const attendedStudentIds = new Set();
+                        const submissions = new Map();
+                        let totalScore = 0;
+
+                        subsSnapshot.forEach(doc => {
+                            const sub = doc.data();
+                            attendedStudentIds.add(sub.userId);
+                            submissions.set(sub.userId, sub);
+                            totalScore += sub.score;
+                        });
+
+                        const totalSubmissions = subsSnapshot.size;
+                        const totalStudents = allStudents.size;
+                        
+                        const avgScore = totalSubmissions > 0 ? (totalScore / totalSubmissions) : 0;
+                        const completionRate = totalStudents > 0 ? (totalSubmissions / totalStudents) * 100 : 0;
+                        const maxScore = submissions.values().next().value?.totalMarks || 0;
+                        
+                        document.getElementById('avg-score').textContent = `${avgScore.toFixed(2)} / ${maxScore}`;
+                        document.getElementById('completion-rate').textContent = `${completionRate.toFixed(1)}%`;
+
+                        let attendedHtml = '', notAttendedHtml = '';
+                        let attendedCount = 1, notAttendedCount = 1;
+                        const scoreDistribution = [0, 0, 0, 0, 0];
+
+                        allStudents.forEach((student, uid) => {
+                            if (attendedStudentIds.has(uid)) {
+                                const sub = submissions.get(uid);
+                                if (!sub.startTime || !sub.endTime) return; // Skip if timestamps are missing
+
+                                const scorePercent = maxScore > 0 ? (sub.score / maxScore) * 100 : 0;
+                                
+                                if (scorePercent <= 20) scoreDistribution[0]++;
+                                else if (scorePercent <= 40) scoreDistribution[1]++;
+                                else if (scorePercent <= 60) scoreDistribution[2]++;
+                                else if (scorePercent <= 80) scoreDistribution[3]++;
+                                else scoreDistribution[4]++;
+
+                                // Time Calculations
+                                const startTime = sub.startTime.toDate();
+                                const endTime = sub.endTime.toDate();
+                                const timeTakenInMillis = endTime - startTime;
+                                const minutesTaken = Math.floor(timeTakenInMillis / 60000);
+                                const secondsTaken = Math.floor((timeTakenInMillis % 60000) / 1000);
+                                const formattedTimeTaken = `${minutesTaken}m ${secondsTaken}s`;
+
+                                const totalDurationInMillis = testDurationInMinutes * 60000;
+                                const timeRemainingInMillis = Math.max(0, totalDurationInMillis - timeTakenInMillis);
+                                const minutesRemaining = Math.floor(timeRemainingInMillis / 60000);
+                                const secondsRemaining = Math.floor((timeRemainingInMillis % 60000) / 1000);
+                                const formattedTimeRemaining = `${minutesRemaining}m ${secondsRemaining}s`;
+
+                                attendedHtml += `<tr>
+                                    <td>${attendedCount++}</td>
+                                    <td>${student.name}</td>
+                                    <td>${student.register_number}</td>
+                                    <td>${sub.score} / ${sub.totalMarks}</td>
+                                    <td>${student.email}</td>
+                                    <td>${formattedTimeTaken}</td>
+                                    <td>${formattedTimeRemaining}</td>
+                                </tr>`;
+                            } else {
+                                notAttendedHtml += `<tr>
+                                    <td>${notAttendedCount++}</td>
+                                    <td>${student.name}</td>
+                                    <td>${student.register_number}</td>
+                                    <td>${student.email}</td>
+                                </tr>`;
+                            }
+                        });
+
+                        attendedBody.innerHTML = attendedHtml || `<tr><td colspan="7">No submissions yet.</td></tr>`;
+                        notAttendedBody.innerHTML = notAttendedHtml || `<tr><td colspan="4">All students have attended.</td></tr>`;
+                        
+                        updateScoreChart({
+                            labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+                            data: scoreDistribution
+                        });
+
+                    }, error => {
+                        console.error("Error fetching real-time results:", error);
+                        attendedBody.innerHTML = `<tr><td colspan="7" style="color:red;">Error loading results.</td></tr>`;
+                    });
+            } catch (error) {
+                console.error("Error setting up results view:", error);
+                attendedBody.innerHTML = `<tr><td colspan="7" style="color:red;">Could not load student data.</td></tr>`;
+            }
+        };
         
-        function updateScoreChart(data) {
+        function updateScoreChart({ labels, data }) {
             const ctx = document.getElementById('score-chart').getContext('2d');
             if (scoreChartInstance) scoreChartInstance.destroy();
             scoreChartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: Object.keys(data), datasets: [{ label: '# of Students', data: Object.values(data), backgroundColor: 'rgba(123, 104, 238, 0.5)', borderColor: 'rgba(123, 104, 238, 1)', borderWidth: 1 }] },
-                options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true, plugins: { title: { display: true, text: 'Score Distribution' } } }
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: data,
+                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Score Distribution', font: { size: 16 } } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
             });
         }
-
+        
         function exportToExcel(tableId, filename) {
             const table = document.getElementById(tableId);
+            if (!table) return;
             const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
             XLSX.writeFile(wb, `${filename}.xlsx`);
         }
+        
         document.getElementById('export-attended-btn').addEventListener('click', () => exportToExcel('attended-table', 'Attended_Students_Report'));
         document.getElementById('export-not-attended-btn').addEventListener('click', () => exportToExcel('not-attended-table', 'Not_Attended_Students_Report'));
-        
+
         const createTestForm = document.getElementById('create-test-form');
         createTestForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -487,122 +563,177 @@ document.addEventListener('DOMContentLoaded', () => {
             const duration = parseInt(document.getElementById('test-duration').value, 10);
             const startTime = new Date(document.getElementById('start-time').value);
             const endTime = new Date(document.getElementById('end-time').value);
-            const file = document.getElementById('question-file').files[0];
             
-            if (!title || !duration || !startTime || !endTime) return alert('Please fill all required fields.');
-            if (startTime >= endTime) return alert('End time must be after the start time.');
-            if (!editTestId && !file) return alert('Please upload a question file for a new test.');
-
-            const testData = {
-                title, duration,
-                startTime: firebase.firestore.Timestamp.fromDate(startTime),
-                endTime: firebase.firestore.Timestamp.fromDate(endTime),
-            };
-
+            const testData = { title, duration, startTime, endTime };
+            const saveBtn = document.getElementById('save-test-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
             try {
                 if (editTestId) {
                     await db.collection('tests').doc(editTestId).update(testData);
-                    alert(`Test "${title}" updated successfully.`);
+                    alert('Test updated successfully!');
                 } else {
-                    const reader = new FileReader();
-                    reader.onload = async (event) => {
-                        try {
-                            const questions = parseQuestionText(event.target.result);
-                            if (questions.length === 0) return alert('No valid questions found in file.');
-                            
-                            testData.totalQuestions = questions.length;
-                            testData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-
-                            const testRef = await db.collection('tests').add(testData);
-                            
-                            const batch = db.batch();
-                            questions.forEach((q, index) => {
-                                const qRef = db.collection('tests').doc(testRef.id).collection('questions').doc();
-                                batch.set(qRef, { ...q, questionId: qRef.id, questionNumber: index + 1 });
-                            });
-                            await batch.commit();
-                            alert(`Test "${title}" created successfully.`);
-                        } catch (error) { alert(`Error processing file: ${error.message}`); }
-                    };
-                    reader.readAsText(file);
+                    const questionFile = document.getElementById('question-file').files[0];
+                    if (!questionFile) throw new Error("Question file is required for a new test.");
+                    
+                    const fileText = await questionFile.text();
+                    const questions = parseQuestionText(fileText);
+                    if (questions.length === 0) throw new Error("No valid questions found in the file.");
+                    
+                    testData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    const testRef = db.collection('tests').doc();
+                    
+                    const batch = db.batch();
+                    batch.set(testRef, testData);
+                    questions.forEach((q, index) => {
+                        const questionRef = testRef.collection('questions').doc();
+                        q.questionNumber = index + 1;
+                        batch.set(questionRef, q);
+                    });
+                    
+                    await batch.commit();
+                    alert('Test created successfully!');
                 }
-                resetCreateTestForm();
                 switchView('tests-view');
-            } catch (error) { alert(`Error saving test: ${error.message}`); }
+            } catch (error) {
+                console.error("Error saving test:", error);
+                alert(`Failed to save test: ${error.message}`);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Test';
+            }
         });
         
         document.getElementById('download-sample-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            const sampleText = `1. What is the capital of France?
-a) Berlin
-b) Madrid
-c) Paris
-d) Rome
-Correct Answer: c) Paris
----
-2. Which planet is known as the Red Planet?
-a) Earth
-b) Mars
-c) Jupiter
-d) Venus
-Correct Answer: b) Mars
----
-3. What is the largest ocean on Earth?
-a) Atlantic Ocean
-b) Indian Ocean
-c) Arctic Ocean
-d) Pacific Ocean
-Correct Answer: Pacific Ocean`;
-
+             e.preventDefault();
+            const sampleText = `1. What is the capital of France?\na) Berlin\nb) Madrid\nc) Paris\nd) Rome\nCorrect Answer: c) Paris\n\n---\n\n2. Which planet is known as the Red Planet?\na) Earth\nb) Mars\nc) Jupiter\nd) Venus\nCorrect Answer: b) Mars`;
             const blob = new Blob([sampleText], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'sample_questions.txt';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sample_questions.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
-
+        
         function resetCreateTestForm() {
             createTestForm.reset();
             document.getElementById('edit-test-id').value = '';
             pageTitle.textContent = "Create New Test";
             document.getElementById('save-test-btn').textContent = "Save Test";
             document.getElementById('question-file-group').style.display = 'block';
-            document.getElementById('question-file').required = true;
         }
-
+        
         function parseQuestionText(text) {
+            const questionBlocks = text.split('---').map(b => b.trim()).filter(b => b);
             const questions = [];
-            const questionBlocks = text.split('---').filter(b => b.trim());
-            for (const block of questionBlocks) {
-                const lines = block.trim().split('\n').filter(l => l.trim());
-                if (lines.length < 2) continue;
-                const questionLine = lines.find(l => /^\d+\./.test(l));
-                if (!questionLine) continue;
-                const questionText = questionLine.replace(/^\d+\.\s*/, '').trim();
-                const options = lines.filter(l => /^[a-zA-Z]\)/.test(l)).map(l => l.trim());
-                const answerLine = lines.find(l => l.toLowerCase().startsWith('correct answer:'));
-                if (!answerLine || options.length === 0) continue;
-                const correctAnswerFull = answerLine.split(':')[1].trim();
-                const cleanedOptions = options.map(opt => opt.replace(/^[a-zA-Z]\)\s*/, '').trim());
-                const correctAnswerText = correctAnswerFull.replace(/^[a-zA-Z]\)\s*/, '').trim();
-                if (questionText && correctAnswerText) {
-                    questions.push({ questionText, options: cleanedOptions, correctAnswer: correctAnswerText });
-                }
-            }
+            questionBlocks.forEach(block => {
+                const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+                if (lines.length < 3) return;
+
+                const questionText = lines[0].replace(/^\d+\.\s*/, '');
+                const options = lines.slice(1, -1).map(l => l.replace(/^[a-z]\)\s*/, ''));
+                const correctAnswerLine = lines[lines.length - 1];
+                const match = correctAnswerLine.match(/Correct Answer:\s*[a-z]\)\s*(.*)/i);
+                if (!match) return;
+                
+                const correctAnswer = match[1].trim();
+                questions.push({ questionText, options, correctAnswer });
+            });
             return questions;
         }
 
-        mobileSidebarToggle.addEventListener('click', () => {
-            sidebar.classList.add('open');
-            overlay.classList.add('active');
+        // --- Student Import Logic ---
+        const importBtn = document.getElementById('import-students-btn');
+        const importFile = document.getElementById('student-import-file');
+        const importStatus = document.getElementById('import-status');
+
+        importBtn.addEventListener('click', async () => {
+            const file = importFile.files[0];
+            if (!file) {
+                importStatus.textContent = 'Please select a file first.';
+                importStatus.style.color = 'var(--danger-color)';
+                return;
+            }
+
+            importBtn.disabled = true;
+            importBtn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Importing...";
+            importStatus.textContent = 'Reading file...';
+            importStatus.style.color = 'var(--text-color)';
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const workbook = XLSX.read(event.target.result, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const studentsData = XLSX.utils.sheet_to_json(worksheet);
+
+                    let successCount = 0;
+                    let errorCount = 0;
+                    const errorMessages = [];
+                    
+                    importStatus.textContent = `Found ${studentsData.length} students. Starting import...`;
+
+                    const tempAppName = 'userCreatorApp' + Date.now();
+                    const tempApp = firebase.initializeApp(firebaseConfig, tempAppName);
+                    const tempAuth = tempApp.auth();
+
+                    for (const student of studentsData) {
+                        const { Name, RegisterNumber, Year, Email, Password } = student;
+                        
+                        if (!Email || !Password || !Name || !RegisterNumber || !Year) {
+                            errorCount++;
+                            errorMessages.push(`Skipping row with missing data: ${JSON.stringify(student)}`);
+                            continue;
+                        }
+                        
+                        try {
+                            const userCredential = await tempAuth.createUserWithEmailAndPassword(Email, Password.toString());
+                            const uid = userCredential.user.uid;
+
+                            await db.collection('users').doc(uid).set({
+                                name: Name,
+                                email: Email,
+                                register_number: RegisterNumber.toString(),
+                                year: parseInt(Year, 10),
+                                role: 'student'
+                            });
+                            successCount++;
+                        } catch (error) {
+                            errorCount++;
+                            errorMessages.push(`Failed to import ${Email}: ${error.message}`);
+                        }
+                    }
+                    
+                    await tempApp.delete();
+
+                    importStatus.innerHTML = `Import complete! <br> 
+                        <strong style="color:var(--success-color)">${successCount} students imported successfully.</strong><br>
+                        <strong style="color:var(--danger-color)">${errorCount} students failed.</strong>`;
+                    
+                    if (errorMessages.length > 0) {
+                        console.error("Import errors:", errorMessages);
+                        importStatus.innerHTML += '<br>Check browser console for error details.';
+                    }
+
+                } catch (e) {
+                    importStatus.textContent = `Error processing file: ${e.message}`;
+                    importStatus.style.color = 'var(--danger-color)';
+                } finally {
+                    importBtn.disabled = false;
+                    importBtn.innerHTML = "<i class='bx bx-upload'></i> Import Students";
+                    importFile.value = '';
+                }
+            };
+            reader.readAsBinaryString(file);
         });
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        });
+
+        mobileSidebarToggle.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); });
+        overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
 
         // Initial Load
         loadDashboardStats();

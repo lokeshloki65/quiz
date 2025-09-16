@@ -12,49 +12,65 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-color: #6a5af9; --primary-color-light: #f0edff; --sidebar-bg: #1e293b; 
-            --card-bg: #ffffff; --background-color: #f8f9fa; --text-color: #4a5568; 
-            --heading-color: #1a202c; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
-            --border-radius: 0.75rem; --transition-speed: 0.3s ease; --success-color: #28a745; --danger-color: #dc3545; --warning-color: #ffc107;
+            --primary-color: #7b68ee; --primary-color-light: #e0dcfd; --sidebar-bg: #111827; --card-bg: #ffffff;
+            --background-color: #f9fafb; --text-color: #6b7280; --heading-color: #1f2937; --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,.05), 0 2px 4px -1px rgba(0,0,0,.04); --border-radius: 0.75rem;
+            --transition-speed: 0.3s ease; --success-color: #10b981; --danger-color: #ef4444; --warning-color: #f59e0b;
+            --info-color: #3b82f6; --expired-color: #6b7280;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: var(--background-color); display: flex; height: 100vh; overflow: hidden; position: relative; }
-        .sidebar { width: 260px; background-color: var(--sidebar-bg); padding: 1.5rem 1rem; color: #cbd5e1; display: flex; flex-direction: column; z-index: 1000; transition: left var(--transition-speed); }
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); padding: 1.5rem 1rem; color: #d1d5db; display: flex; flex-direction: column; z-index: 1000; transition: left var(--transition-speed); }
         .sidebar-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem; }
         .logo-icon { font-size: 2rem; color: var(--primary-color); }
-        .logo-text { font-size: 1.5rem; font-weight: 600; }
+        .logo-text { font-size: 1.5rem; font-weight: 600; color: #fff; }
         .sidebar-nav { list-style: none; flex-grow: 1; }
-        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #94a3b8; text-decoration: none; margin-bottom: 0.5rem; transition: var(--transition-speed); }
-        .nav-link:hover, .nav-link.active { background-color: rgba(106, 90, 249, 0.2); color: #fff; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #9ca3af; text-decoration: none; margin-bottom: 0.5rem; transition: var(--transition-speed); }
+        .nav-link:hover, .nav-link.active { background-color: rgba(123, 104, 238, 0.2); color: #fff; }
         .nav-icon { font-size: 1.4rem; margin-right: 1rem; }
         .main-content { flex-grow: 1; overflow-y: auto; padding: 2rem; }
         .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
-        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: var(--transition-speed); }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: var(--transition-speed); display: inline-flex; align-items: center; gap: 0.5rem; }
         .btn-primary { background-color: var(--primary-color); color: #fff; }
+        .btn-primary:hover { background-color: #6a5af9; }
         .btn-secondary { background-color: #6c757d; color: #fff; }
         .btn-success { background-color: var(--success-color); color:#fff; }
+        .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.3rem; border-radius: 50%; }
+        .action-btn:hover { background-color: #f3f4f6; }
+        .btn-edit { color: var(--info-color); }
+        .btn-delete { color: var(--danger-color); }
         .card { background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.5rem; }
         table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
-        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { font-size: 0.9rem; text-transform: uppercase; color: #a0aec0; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        th { font-size: 0.8rem; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.05em; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--heading-color); }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; transition: var(--transition-speed); }
+        .form-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-color-light); outline: none; }
         .form-row { display: flex; gap: 1rem; }
         #admin-view > div { display: none; }
         #admin-view > div.active { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-        .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); display: flex; align-items: center; gap: 1rem; }
-        .stat-icon { font-size: 2.5rem; padding: 1rem; border-radius: 50%; color: var(--primary-color); background: var(--primary-color-light); }
-        .stat-info h3 { font-size: 2rem; color: var(--heading-color); }
-        .stat-info p { color: var(--text-color); }
-        .results-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); display: flex; align-items: center; gap: 1rem; color: #fff; }
+        .stat-card:nth-child(1) { background: linear-gradient(135deg, #7b68ee, #5a48d8); }
+        .stat-card:nth-child(2) { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-card:nth-child(3) { background: linear-gradient(135deg, #10b981, #059669); }
+        .stat-icon { font-size: 2rem; padding: 1rem; border-radius: 50%; background: rgba(255,255,255,0.2); }
+        .stat-info h3 { font-size: 2.25rem; font-weight: 700; }
+        .stat-info p { opacity: 0.9; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
         .results-header h2 { font-size: 1.5rem; }
-        .mobile-sidebar-toggle { display: none; }
+        .status-badge { padding: 0.25em 0.75em; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status-live { background-color: #dcfce7; color: #166534; }
+        .status-upcoming { background-color: #dbeafe; color: #1e40af; }
+        .status-expired { background-color: #e5e7eb; color: #4b5563; }
         .malpractice-icon { color: var(--warning-color); font-size: 1.2rem; margin-left: 0.5rem; cursor: help; }
+        .mobile-sidebar-toggle { display: none; }
         .overlay { display: none; }
+        #download-sample-btn { color: var(--primary-color); text-decoration: none; font-weight: 500; }
+        #download-sample-btn:hover { text-decoration: underline; }
         @media (max-width: 992px) {
             .sidebar { position: fixed; left: -260px; height: 100%; }
             .sidebar.open { left: 0; }
@@ -80,42 +96,49 @@
             <li><a href="#" class="nav-link active" data-view="dashboard-view"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
             <li><a href="#" class="nav-link" data-view="tests-view"><i class='bx bxs-spreadsheet nav-icon'></i>Test Management</a></li>
             <li><a href="#" class="nav-link" data-view="students-view"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
+            <li><a href="leaderboard.html" class="nav-link"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
         </ul>
     </aside>
     <main class="main-content">
         <header class="main-header">
             <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
             <h1 id="page-title" class="page-title">Dashboard</h1>
-            <button class="btn btn-primary" id="header-action-btn">+ Create New Test</button>
+            <button class="btn btn-primary" id="header-action-btn"><i class='bx bx-plus'></i> Create New Test</button>
         </header>
         <div id="admin-view">
             <div id="dashboard-view" class="active">
                 <div class="stats-grid">
                     <div class="stat-card"><i class='bx bxs-group stat-icon'></i><div class="stat-info"><h3 id="total-students">0</h3><p>Total Students</p></div></div>
-                    <div class="stat-card"><i class='bx bxs-spreadsheet stat-icon'></i><div class="stat-info"><h3 id="total-tests">0</h3><p>Total Tests Created</p></div></div>
+                    <div class="stat-card"><i class='bx bxs-spreadsheet stat-icon'></i><div class="stat-info"><h3 id="total-tests">0</h3><p>Total Tests</p></div></div>
                     <div class="stat-card"><i class='bx bxs-check-square stat-icon'></i><div class="stat-info"><h3 id="total-submissions">0</h3><p>Total Submissions</p></div></div>
+                </div>
+                <div class="card" style="margin-top: 2rem;">
+                    <canvas id="submissions-chart"></canvas>
                 </div>
             </div>
             <div id="tests-view" class="card">
-                <table id="tests-table">
-                    <thead><tr><th>Test Title</th><th>Starts On</th><th>Ends On</th><th>Actions</th></tr></thead>
+                 <table id="tests-table">
+                    <thead><tr><th>Test Title</th><th>Starts On</th><th>Ends On</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
             <div id="create-test-view" class="card">
                 <form id="create-test-form">
+                    <input type="hidden" id="edit-test-id">
                     <div class="form-group"><label for="test-title">Test Title</label><input type="text" id="test-title" required></div>
                     <div class="form-row">
-                        <div class="form-group"><label for="start-time">Start Time</label><input type="datetime-local" id="start-time" required></div>
-                        <div class="form-group"><label for="end-time">End Time</label><input type="datetime-local" id="end-time" required></div>
+                        <div class="form-group" style="flex:1;"><label for="start-time">Start Time</label><input type="datetime-local" id="start-time" required></div>
+                        <div class="form-group" style="flex:1;"><label for="end-time">End Time</label><input type="datetime-local" id="end-time" required></div>
                     </div>
                     <div class="form-group"><label for="test-duration">Duration (in minutes)</label><input type="number" id="test-duration" required></div>
-                    <div class="form-group">
-                        <label for="question-file">Upload Questions (.txt file)</label><input type="file" id="question-file" accept=".txt" required>
-                        <small>Format: Numbered question, lettered options (a), b), etc.), and a line for "Correct Answer:". Separate questions with "---".</small>
+                    <div class="form-group" id="question-file-group">
+                        <label for="question-file">Upload Questions (.txt file)</label><input type="file" id="question-file" accept=".txt">
+                        <small>Format: Numbered question, lettered options (a), b), etc.), and "Correct Answer:". Separate questions with "---". <br> 
+                        <a href="#" id="download-sample-btn">Download sample format</a>
+                        </small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Test</button>
-                    <button type="button" class="btn" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-test-btn">Save Test</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
                 </form>
             </div>
             <div id="results-view">
@@ -160,46 +183,40 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
-                      apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-  projectId: "student-central-hub-5w4l8",
-  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-  messagingSenderId: "379433916597",
-  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-};
+        apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+        authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+        projectId: "student-central-hub-5w4l8",
+        storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+        messagingSenderId: "379433916597",
+        appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
     
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
     catch(e) { console.error("Firebase init error", e); }
     
     const db = firebase.firestore();
-    const auth = firebase.auth(); // Added Auth
+    const auth = firebase.auth();
     
-    // --- NEW: Security Check for Admin Page ---
     auth.onAuthStateChanged(user => {
         if (user) {
-            // User is logged in, now check if they are an admin
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (doc.exists && doc.data().role === 'admin') {
-                    // User is an admin, let them stay.
                     console.log("Admin access granted.");
-                    // Now we can initialize the rest of the dashboard
                     initializeAdminPanel(); 
                 } else {
-                    // User is not an admin, redirect them.
                     alert("Access Denied. You must be an admin to view this page.");
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
             });
         } else {
-            // User is not logged in, redirect them.
             alert("Access Denied. Please log in as an admin.");
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
     });
 
-    // All original code is now inside this function
     function initializeAdminPanel() {
         let scoreChartInstance = null;
+        let submissionsChartInstance = null;
         let unsubscribeResults = null;
         
         const navLinks = document.querySelectorAll('.nav-link');
@@ -216,13 +233,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'results-view': 'Test Results'};
             pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
             headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view') ? 'none' : 'block';
-            headerActionBtn.textContent = '+ Create New Test';
+            headerActionBtn.innerHTML = "<i class='bx bx-plus'></i> Create New Test";
+
+            if (viewId !== 'create-test-view') {
+                resetCreateTestForm();
+            }
         }
 
         navLinks.forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
                 const viewId = e.currentTarget.getAttribute('data-view');
+                if (e.currentTarget.href.includes('leaderboard.html')) {
+                    window.location.href = 'leaderboard.html';
+                    return;
+                }
                 if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
                 switchView(viewId);
                 sidebar.classList.remove('open');
@@ -243,6 +268,63 @@ document.addEventListener('DOMContentLoaded', () => {
             db.collection('submissions').onSnapshot(snap => { document.getElementById('total-submissions').textContent = snap.size; });
         }
 
+        function loadSubmissionsChart() {
+            const days = 14; // Show data for the last 14 days
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - (days - 1));
+
+            const dateMap = new Map();
+            for (let i = 0; i < days; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                const dateString = date.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                dateMap.set(dateString, 0);
+            }
+
+            const firestoreStartDate = firebase.firestore.Timestamp.fromDate(startDate);
+            
+            db.collection('submissions')
+              .where('startTime', '>=', firestoreStartDate)
+              .onSnapshot(snap => {
+                const submissionsCount = new Map(dateMap); // Reset counts on each snapshot
+                snap.forEach(doc => {
+                    const date = doc.data().startTime.toDate().toLocaleDateString('en-CA');
+                    if (submissionsCount.has(date)) {
+                        submissionsCount.set(date, submissionsCount.get(date) + 1);
+                    }
+                });
+                
+                const labels = Array.from(submissionsCount.keys()).map(dateStr => new Date(dateStr).toLocaleDateString('en-GB', { month: 'short', day: 'numeric'}));
+                const data = Array.from(submissionsCount.values());
+                
+                updateSubmissionsChart({ labels, data });
+            });
+        }
+        
+        function updateSubmissionsChart({ labels, data }) {
+            const ctx = document.getElementById('submissions-chart').getContext('2d');
+            if (submissionsChartInstance) submissionsChartInstance.destroy();
+            submissionsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        label: 'Submissions per Day', 
+                        data: data, 
+                        backgroundColor: 'rgba(123, 104, 238, 0.1)', 
+                        borderColor: 'rgba(123, 104, 238, 1)', 
+                        borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: 'rgba(123, 104, 238, 1)',
+                    }] 
+                },
+                options: { 
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, 
+                    responsive: true, 
+                    plugins: { title: { display: true, text: 'Submissions Over Last 14 Days', font: { size: 16 } } } 
+                }
+            });
+        }
+
         function loadStudents() {
             const tableBody = document.querySelector('#students-table tbody');
             db.collection('users').where('role', '==', 'student').onSnapshot(snapshot => {
@@ -260,17 +342,74 @@ document.addEventListener('DOMContentLoaded', () => {
         function loadTests() {
             const tableBody = document.querySelector('#tests-table tbody');
             db.collection('tests').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-                if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="4">No tests found. Create one!</td></tr>'; return; }
+                if (snapshot.empty) { tableBody.innerHTML = '<tr><td colspan="5">No tests found. Create one!</td></tr>'; return; }
                 let html = '';
                 snapshot.forEach(doc => {
                     const t = doc.data();
-                    const startTime = t.startTime ? t.startTime.toDate().toLocaleString() : 'N/A';
-                    const endTime = t.endTime ? t.endTime.toDate().toLocaleString() : 'N/A';
-                    html += `<tr><td>${t.title}</td><td>${startTime}</td><td>${endTime}</td><td><button class="btn" onclick="viewResults('${doc.id}', '${t.title}')">View Results</button></td></tr>`;
+                    const now = new Date();
+                    const startTime = t.startTime ? t.startTime.toDate() : null;
+                    const endTime = t.endTime ? t.endTime.toDate() : null;
+                    
+                    let status = 'Expired', statusClass = 'status-expired';
+                    if (startTime && endTime) {
+                        if (now < startTime) { status = 'Upcoming'; statusClass = 'status-upcoming'; }
+                        else if (now >= startTime && now <= endTime) { status = 'Live'; statusClass = 'status-live'; }
+                    }
+
+                    const formattedStartTime = startTime ? startTime.toLocaleString() : 'N/A';
+                    const formattedEndTime = endTime ? endTime.toLocaleString() : 'N/A';
+                    
+                    html += `<tr>
+                        <td>${t.title}</td> <td>${formattedStartTime}</td> <td>${formattedEndTime}</td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="viewResults('${doc.id}', '${t.title.replace(/'/g, "\\'")}')">Results</button>
+                            <button class="action-btn btn-edit" title="Edit Test" onclick="editTest('${doc.id}')"><i class='bx bxs-edit'></i></button>
+                            <button class="action-btn btn-delete" title="Delete Test" onclick="deleteTest('${doc.id}')"><i class='bx bxs-trash'></i></button>
+                        </td>
+                    </tr>`;
                 });
                 tableBody.innerHTML = html;
             });
         }
+        
+        window.deleteTest = async function(testId) {
+            if (confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
+                try {
+                    await db.collection('tests').doc(testId).delete();
+                    alert('Test deleted successfully.');
+                } catch (error) {
+                    console.error("Error deleting test: ", error);
+                    alert('Failed to delete test. See console for details.');
+                }
+            }
+        };
+        
+        window.editTest = async function(testId) {
+            try {
+                const testDoc = await db.collection('tests').doc(testId).get();
+                if (!testDoc.exists) return alert('Test not found.');
+
+                const testData = testDoc.data();
+                switchView('create-test-view');
+                
+                pageTitle.textContent = "Edit Test";
+                document.getElementById('edit-test-id').value = testId;
+                document.getElementById('test-title').value = testData.title;
+                document.getElementById('test-duration').value = testData.duration;
+                
+                const toLocalISOString = date => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+
+                if (testData.startTime) document.getElementById('start-time').value = toLocalISOString(testData.startTime.toDate());
+                if (testData.endTime) document.getElementById('end-time').value = toLocalISOString(testData.endTime.toDate());
+                
+                document.getElementById('save-test-btn').textContent = "Save Changes";
+                document.getElementById('question-file-group').style.display = 'none';
+            } catch (error) {
+                console.error("Error fetching test for edit:", error);
+                alert("Could not load test data for editing.");
+            }
+        };
 
         window.viewResults = async function(testId, testTitle) {
             switchView('results-view');
@@ -327,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (scoreChartInstance) scoreChartInstance.destroy();
             scoreChartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: Object.keys(data), datasets: [{ label: '# of Students', data: Object.values(data), backgroundColor: 'rgba(106, 90, 249, 0.5)', borderColor: 'rgba(106, 90, 249, 1)', borderWidth: 1 }] },
+                data: { labels: Object.keys(data), datasets: [{ label: '# of Students', data: Object.values(data), backgroundColor: 'rgba(123, 104, 238, 0.5)', borderColor: 'rgba(123, 104, 238, 1)', borderWidth: 1 }] },
                 options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true, plugins: { title: { display: true, text: 'Score Distribution' } } }
             });
         }
@@ -343,37 +482,96 @@ document.addEventListener('DOMContentLoaded', () => {
         const createTestForm = document.getElementById('create-test-form');
         createTestForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const editTestId = document.getElementById('edit-test-id').value;
             const title = document.getElementById('test-title').value;
             const duration = parseInt(document.getElementById('test-duration').value, 10);
-            const file = document.getElementById('question-file').files[0];
             const startTime = new Date(document.getElementById('start-time').value);
             const endTime = new Date(document.getElementById('end-time').value);
-            if (!title || !duration || !file || !startTime || !endTime) return alert('Please fill all fields.');
+            const file = document.getElementById('question-file').files[0];
+            
+            if (!title || !duration || !startTime || !endTime) return alert('Please fill all required fields.');
             if (startTime >= endTime) return alert('End time must be after the start time.');
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const questions = parseQuestionText(event.target.result);
-                    if (questions.length === 0) return alert('No valid questions in file.');
-                    const testRef = await db.collection('tests').add({ 
-                        title, duration, totalQuestions: questions.length, 
-                        startTime: firebase.firestore.Timestamp.fromDate(startTime),
-                        endTime: firebase.firestore.Timestamp.fromDate(endTime),
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-                    });
-                    const batch = db.batch();
-                    questions.forEach((q, index) => {
-                        const qRef = db.collection('tests').doc(testRef.id).collection('questions').doc();
-                        batch.set(qRef, { ...q, questionId: qRef.id, questionNumber: index + 1 });
-                    });
-                    await batch.commit();
-                    alert(`Test "${title}" created successfully.`);
-                    createTestForm.reset();
-                    switchView('tests-view');
-                } catch (error) { alert(`Error: ${error.message}`); }
+            if (!editTestId && !file) return alert('Please upload a question file for a new test.');
+
+            const testData = {
+                title, duration,
+                startTime: firebase.firestore.Timestamp.fromDate(startTime),
+                endTime: firebase.firestore.Timestamp.fromDate(endTime),
             };
-            reader.readAsText(file);
+
+            try {
+                if (editTestId) {
+                    await db.collection('tests').doc(editTestId).update(testData);
+                    alert(`Test "${title}" updated successfully.`);
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        try {
+                            const questions = parseQuestionText(event.target.result);
+                            if (questions.length === 0) return alert('No valid questions found in file.');
+                            
+                            testData.totalQuestions = questions.length;
+                            testData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+                            const testRef = await db.collection('tests').add(testData);
+                            
+                            const batch = db.batch();
+                            questions.forEach((q, index) => {
+                                const qRef = db.collection('tests').doc(testRef.id).collection('questions').doc();
+                                batch.set(qRef, { ...q, questionId: qRef.id, questionNumber: index + 1 });
+                            });
+                            await batch.commit();
+                            alert(`Test "${title}" created successfully.`);
+                        } catch (error) { alert(`Error processing file: ${error.message}`); }
+                    };
+                    reader.readAsText(file);
+                }
+                resetCreateTestForm();
+                switchView('tests-view');
+            } catch (error) { alert(`Error saving test: ${error.message}`); }
         });
+        
+        document.getElementById('download-sample-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            const sampleText = `1. What is the capital of France?
+a) Berlin
+b) Madrid
+c) Paris
+d) Rome
+Correct Answer: c) Paris
+---
+2. Which planet is known as the Red Planet?
+a) Earth
+b) Mars
+c) Jupiter
+d) Venus
+Correct Answer: b) Mars
+---
+3. What is the largest ocean on Earth?
+a) Atlantic Ocean
+b) Indian Ocean
+c) Arctic Ocean
+d) Pacific Ocean
+Correct Answer: Pacific Ocean`;
+
+            const blob = new Blob([sampleText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'sample_questions.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        });
+
+        function resetCreateTestForm() {
+            createTestForm.reset();
+            document.getElementById('edit-test-id').value = '';
+            pageTitle.textContent = "Create New Test";
+            document.getElementById('save-test-btn').textContent = "Save Test";
+            document.getElementById('question-file-group').style.display = 'block';
+            document.getElementById('question-file').required = true;
+        }
 
         function parseQuestionText(text) {
             const questions = [];
@@ -391,11 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cleanedOptions = options.map(opt => opt.replace(/^[a-zA-Z]\)\s*/, '').trim());
                 const correctAnswerText = correctAnswerFull.replace(/^[a-zA-Z]\)\s*/, '').trim();
                 if (questionText && correctAnswerText) {
-                    questions.push({
-                        questionText: questionText,
-                        options: cleanedOptions,
-                        correctAnswer: correctAnswerText
-                    });
+                    questions.push({ questionText, options: cleanedOptions, correctAnswer: correctAnswerText });
                 }
             }
             return questions;
@@ -412,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initial Load
         loadDashboardStats();
+        loadSubmissionsChart();
         loadTests();
         loadStudents();
     }

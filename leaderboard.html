@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard | AI Academicy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #7b68ee; --primary-color-light: #e0dcfd; --sidebar-bg: #111827; --card-bg: #ffffff;
+            --background-color: #f9fafb; --text-color: #6b7280; --heading-color: #1f2937; --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,.05), 0 2px 4px -1px rgba(0,0,0,.04); --border-radius: 0.75rem;
+            --transition-speed: 0.3s ease; --gold-color: #ffbf00; --silver-color: #c0c0c0; --bronze-color: #cd7f32;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); color: var(--text-color); display: flex; overflow-x: hidden; }
+
+        .app-container { display: flex; width: 100vw; height: 100vh; }
+
+        /* --- Sidebar Styles --- */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); padding: 1.5rem 1rem; color: #d1d5db; display: flex; flex-direction: column; z-index: 1000; transition: left var(--transition-speed); }
+        .sidebar-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem; }
+        .logo-icon { font-size: 2rem; color: var(--primary-color); }
+        .logo-text { font-size: 1.5rem; font-weight: 600; color: #fff; }
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #9ca3af; text-decoration: none; margin-bottom: 0.5rem; transition: var(--transition-speed); }
+        .nav-link:hover, .nav-link.active { background-color: rgba(123, 104, 238, 0.2); color: #fff; }
+        .nav-icon { font-size: 1.4rem; margin-right: 1rem; }
+        
+        /* --- Main Content Styles --- */
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
+        .mobile-sidebar-toggle { display: none; }
+        
+        /* --- Leaderboard Specific Styles --- */
+        .leaderboard-container { background: var(--card-bg); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow); }
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table th, .leaderboard-table td { padding: 1rem; text-align: left; }
+        .leaderboard-table thead { border-bottom: 2px solid var(--border-color); }
+        .leaderboard-table th { color: var(--text-color); font-size: 0.9rem; font-weight: 500; text-transform: uppercase; }
+        .leaderboard-table tbody tr:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+        .rank-cell { font-size: 1.2rem; font-weight: 600; text-align: center; width: 80px; }
+        .rank-gold { color: var(--gold-color); }
+        .rank-silver { color: var(--silver-color); }
+        .rank-bronze { color: var(--bronze-color); }
+        .user-cell { display: flex; align-items: center; gap: 1rem; }
+        .user-cell img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .user-cell .name { font-weight: 500; color: var(--heading-color); }
+        .score-cell { font-weight: 600; color: var(--primary-color); }
+        #loading-state { text-align: center; padding: 3rem; font-size: 1.2rem; color: var(--text-color); }
+
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; left: -260px; height: 100%; }
+            .sidebar.open { left: 0; }
+            .main-content { margin-left: 0; }
+            .mobile-sidebar-toggle { display: block; color: var(--text-color); background: none; border: none; font-size: 1.5rem; }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .page-title { font-size: 1.25rem; }
+            .leaderboard-table th, .leaderboard-table td { padding: 0.75rem 0.5rem; }
+            .user-cell { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bxs-brain logo-icon'></i>
+                <h1 class="logo-text">AI Academicy</h1>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="admin.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
+                <li><a href="admin.html" class="nav-link"><i class='bx bxs-spreadsheet nav-icon'></i>Test Management</a></li>
+                <li><a href="admin.html" class="nav-link"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
+                <li><a href="leaderboard.html" class="nav-link active"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content" id="main-content">
+            <header class="main-header">
+                <h1 class="page-title">🏆 Leaderboard</h1>
+            </header>
+            
+            <section class="leaderboard-container">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center;">Rank</th>
+                            <th>Student</th>
+                            <th>Assessments Completed</th>
+                            <th>Average Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr id="loading-state"><td colspan="4">Loading Leaderboard...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const firebaseConfig = {
+            apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+            authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+            projectId: "student-central-hub-5w4l8",
+            storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+            messagingSenderId: "379433916597",
+            appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
+
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    } catch (e) { console.error("Firebase init error", e); }
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // --- NEW: Security Check for Admin Page ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // User is logged in, now check if they are an admin
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if (doc.exists && doc.data().role === 'admin') {
+                    // User is an admin, let them stay.
+                    console.log("Admin access granted for Leaderboard.");
+                    initializeLeaderboardPage(user);
+                } else {
+                    // User is not an admin, redirect them.
+                    alert("Access Denied. You must be an admin to view this page.");
+                    window.location.href = 'index.html'; // Or a student dashboard page
+                }
+            });
+        } else {
+            // User is not logged in, redirect them.
+            alert("Access Denied. Please log in as an admin.");
+            window.location.href = 'index.html';
+        }
+    });
+
+    async function initializeLeaderboardPage(user) {
+        try {
+            const [submissionsSnapshot, usersSnapshot] = await Promise.all([
+                db.collection('submissions').get(),
+                db.collection('users').where('role', '==', 'student').get()
+            ]);
+
+            const usersMap = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data()]));
+            
+            const scores = {};
+            submissionsSnapshot.forEach(doc => {
+                const sub = doc.data();
+                if (!usersMap.has(sub.userId)) return; // Only count submissions from students
+
+                if (!scores[sub.userId]) {
+                    scores[sub.userId] = { totalScore: 0, totalMaxMarks: 0, count: 0 };
+                }
+                scores[sub.userId].totalScore += sub.score;
+                scores[sub.userId].totalMaxMarks += sub.totalMarks;
+                scores[sub.userId].count++;
+            });
+
+            const leaderboard = Object.keys(scores).map(userId => {
+                const userScores = scores[userId];
+                const userData = usersMap.get(userId);
+                const average = userScores.totalMaxMarks > 0 ? (userScores.totalScore / userScores.totalMaxMarks) * 100 : 0;
+                return {
+                    userId,
+                    name: userData.name,
+                    profilePicUrl: userData.profilePicUrl,
+                    score: average,
+                    completed: userScores.count
+                };
+            });
+
+            leaderboard.sort((a, b) => b.score - a.score);
+            renderLeaderboard(leaderboard);
+
+        } catch (error) {
+            console.error("Error loading leaderboard:", error);
+            const loadingRow = document.getElementById('loading-state');
+            loadingRow.innerHTML = `<td colspan="4">Could not load leaderboard data.</td>`;
+        }
+    }
+
+    function renderLeaderboard(leaderboard) {
+        const tableBody = document.getElementById('leaderboard-body');
+        tableBody.innerHTML = ''; // Clear loading state
+
+        if (leaderboard.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 2rem;">No submissions yet to create a leaderboard.</td></tr>`;
+            return;
+        }
+
+        leaderboard.forEach((user, index) => {
+            const rank = index + 1;
+            const row = document.createElement('tr');
+            
+            let rankDisplay = rank;
+            let rankClass = '';
+            if (rank === 1) { rankDisplay = '🏆'; rankClass = 'rank-gold'; }
+            if (rank === 2) { rankDisplay = '🥈'; rankClass = 'rank-silver'; }
+            if (rank === 3) { rankDisplay = '🥉'; rankClass = 'rank-bronze'; }
+
+            row.innerHTML = `
+                <td class="rank-cell ${rankClass}">${rankDisplay}</td>
+                <td>
+                    <div class="user-cell">
+                        <img src="${user.profilePicUrl || `https://ui-avatars.com/api/?name=${user.name.replace(/\s/g, "+")}&background=random`}" alt="${user.name}">
+                        <span class="name">${user.name}</span>
+                    </div>
+                </td>
+                <td>${user.completed}</td>
+                <td class="score-cell">${user.score.toFixed(1)}%</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+});
+</script>
+</body>
+</html>

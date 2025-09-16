@@ -48,7 +48,7 @@
         .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
         .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
         
-        .main-content { flex: 1; padding: 2rem; overflow-y: auto; transition: margin-left var(--transition-speed); }
+        .main-content { flex: 1; padding: 2rem; padding-bottom: 60px; /* Add padding for footer */ overflow-y: auto; transition: margin-left var(--transition-speed); }
         .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .header-left { display: flex; align-items: center; gap: 1rem; }
         .header-left .welcome-msg { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
@@ -56,7 +56,7 @@
         .profile-dropdown img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid var(--primary-color); }
         .sidebar-toggle { font-size: 1.5rem; cursor: pointer; color: #94a3b8; background: none; border: none; transition: var(--transition-speed); }
         .sidebar-toggle:hover { color: #fff; }
-        .mobile-sidebar-toggle { display: none; } /* Initially hidden on desktop */
+        .mobile-sidebar-toggle { display: none; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; transition: var(--transition-speed); animation: fadeIn 0.5s ease-out forwards; }
@@ -84,7 +84,32 @@
         .course-progress-text { font-size: 0.8rem; color: var(--text-color); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- NEW: Media Queries for Responsive Design --- */
+        /* ======== NEW FOOTER STYLES ======== */
+        .page-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0; /* Changed from 260px to 0 */
+            width: 100%;
+            background-color: var(--background-color);
+            text-align: center;
+            padding: 0.75rem;
+            z-index: 999; /* Lower than sidebar */
+            border-top: 1px solid var(--border-color);
+            transition: left var(--transition-speed);
+        }
+        .page-footer a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s;
+        }
+        .page-footer a:hover {
+            color: var(--primary-color);
+        }
+
         @media (max-width: 992px) {
             .sidebar { position: fixed; left: -260px; height: 100%; }
             .sidebar.open { left: 0; }
@@ -92,9 +117,10 @@
             .sidebar-toggle { display: none; }
             .mobile-sidebar-toggle { display: block; color: var(--text-color); }
             .dashboard-grid { grid-template-columns: 1fr; }
+            .page-footer { left: 0 !important; } /* Ensure footer is always at left 0 on mobile */
         }
         @media (max-width: 768px) {
-            .main-content { padding: 1rem; }
+            .main-content { padding: 1rem; padding-bottom: 60px; }
             .header-left .welcome-msg { font-size: 1.25rem; }
             .stats-grid { grid-template-columns: 1fr; }
         }
@@ -130,7 +156,7 @@
             </div>
         </aside>
 
-        <main class="main-content">
+        <main class="main-content" id="main-content">
             <header class="main-header">
                 <div class="header-left">
                     <button class="sidebar-toggle mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
@@ -174,16 +200,22 @@
         </main>
     </div>
 
-<script>
+    <footer class="page-footer" id="page-footer">
+        <a href="team.html" target="_blank" rel="noopener noreferrer">
+            <i class='bx bx-code-alt'></i>
+            <span>code crafters</span>
+        </a>
+    </footer>
+    <script>
 document.addEventListener('DOMContentLoaded', function() {
     const firebaseConfig = {
-                apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-  projectId: "student-central-hub-5w4l8",
-  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-  messagingSenderId: "379433916597",
-  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-};
+              apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+              authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+              projectId: "student-central-hub-5w4l8",
+              storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+              messagingSenderId: "379433916597",
+              appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
 
     try {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -257,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const recentList = document.getElementById('recent-assessments-list');
         recentList.innerHTML = '';
         if(submissions.length === 0) {
-            recentList.innerHTML = '<p>No assessments completed yet.</p>';
+            recentList.innerHTML = '<li><p style="text-align: center; padding: 1rem;">No assessments completed yet.</p></li>';
         } else {
             submissions.slice(0, 4).forEach(sub => {
                 const testTitle = testsMap.get(sub.testId) || 'Unknown Test';
@@ -322,13 +354,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- Sidebar and Logout Logic ---
+    // --- Sidebar, Footer, and Logout Logic ---
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+    const pageFooter = document.getElementById('page-footer');
+    const mainContent = document.getElementById('main-content');
 
     sidebarToggle.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
+        if (window.innerWidth > 992) {
+             // Adjust footer position based on sidebar state on desktop
+             if (sidebar.classList.contains('collapsed')) {
+                pageFooter.style.left = '88px';
+             } else {
+                pageFooter.style.left = '260px';
+             }
+        }
     });
 
     mobileSidebarToggle.addEventListener('click', () => {
@@ -340,6 +382,11 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = 'index.html';
         });
     });
+
+    // Initial footer position check on load for desktop
+    if (window.innerWidth > 992) {
+        pageFooter.style.left = sidebar.classList.contains('collapsed') ? '88px' : '260px';
+    }
 });
 </script>
 </body>

@@ -460,51 +460,59 @@ document.addEventListener('DOMContentLoaded', () => {
                         let attendedCount = 1, notAttendedCount = 1;
                         const scoreDistribution = [0, 0, 0, 0, 0];
 
-                        allStudents.forEach((student, uid) => {
-                            if (attendedStudentIds.has(uid)) {
-                                const sub = submissions.get(uid);
-                                if (!sub.startTime || !sub.endTime) return; // Skip if timestamps are missing
+                        // இதை புதிய Code-ஆக மாற்றவும்
+allStudents.forEach((student, uid) => {
+    if (attendedStudentIds.has(uid)) {
+        const sub = submissions.get(uid);
+        if (!sub.startTime || !sub.endTime) return;
 
-                                const scorePercent = maxScore > 0 ? (sub.score / maxScore) * 100 : 0;
-                                
-                                if (scorePercent <= 20) scoreDistribution[0]++;
-                                else if (scorePercent <= 40) scoreDistribution[1]++;
-                                else if (scorePercent <= 60) scoreDistribution[2]++;
-                                else if (scorePercent <= 80) scoreDistribution[3]++;
-                                else scoreDistribution[4]++;
+        const scorePercent = maxScore > 0 ? (sub.score / maxScore) * 100 : 0;
+        
+        if (scorePercent <= 20) scoreDistribution[0]++;
+        else if (scorePercent <= 40) scoreDistribution[1]++;
+        else if (scorePercent <= 60) scoreDistribution[2]++;
+        else if (scorePercent <= 80) scoreDistribution[3]++;
+        else scoreDistribution[4]++;
 
-                                // Time Calculations
-                                const startTime = sub.startTime.toDate();
-                                const endTime = sub.endTime.toDate();
-                                const timeTakenInMillis = endTime - startTime;
-                                const minutesTaken = Math.floor(timeTakenInMillis / 60000);
-                                const secondsTaken = Math.floor((timeTakenInMillis % 60000) / 1000);
-                                const formattedTimeTaken = `${minutesTaken}m ${secondsTaken}s`;
+        const startTime = sub.startTime.toDate();
+        const endTime = sub.endTime.toDate();
+        const timeTakenInMillis = endTime - startTime;
+        const minutesTaken = Math.floor(timeTakenInMillis / 60000);
+        const secondsTaken = Math.floor((timeTakenInMillis % 60000) / 1000);
+        const formattedTimeTaken = `${minutesTaken}m ${secondsTaken}s`;
 
-                                const totalDurationInMillis = testDurationInMinutes * 60000;
-                                const timeRemainingInMillis = Math.max(0, totalDurationInMillis - timeTakenInMillis);
-                                const minutesRemaining = Math.floor(timeRemainingInMillis / 60000);
-                                const secondsRemaining = Math.floor((timeRemainingInMillis % 60000) / 1000);
-                                const formattedTimeRemaining = `${minutesRemaining}m ${secondsRemaining}s`;
+        const totalDurationInMillis = testDurationInMinutes * 60000;
+        const timeRemainingInMillis = Math.max(0, totalDurationInMillis - timeTakenInMillis);
+        const minutesRemaining = Math.floor(timeRemainingInMillis / 60000);
+        const secondsRemaining = Math.floor((timeRemainingInMillis % 60000) / 1000);
+        const formattedTimeRemaining = `${minutesRemaining}m ${secondsRemaining}s`;
 
-                                attendedHtml += `<tr>
-                                    <td>${attendedCount++}</td>
-                                    <td>${student.name}</td>
-                                    <td>${student.register_number}</td>
-                                    <td>${sub.score} / ${sub.totalMarks}</td>
-                                    <td>${student.email}</td>
-                                    <td>${formattedTimeTaken}</td>
-                                    <td>${formattedTimeRemaining}</td>
-                                </tr>`;
-                            } else {
-                                notAttendedHtml += `<tr>
-                                    <td>${notAttendedCount++}</td>
-                                    <td>${student.name}</td>
-                                    <td>${student.register_number}</td>
-                                    <td>${student.email}</td>
-                                </tr>`;
-                            }
-                        });
+        // --- புதியதாக சேர்க்கப்பட்ட பகுதி START ---
+        let malpracticeIndicator = '';
+        // சப்மிஷன் காரணம் 'Malpractice' ஆக இருந்தால், எச்சரிக்கை குறியை உருவாக்குகிறோம்
+        if (sub.submissionReason && sub.submissionReason.startsWith("Malpractice")) {
+            malpracticeIndicator = `<i class='bx bxs-error-circle' style='color: var(--danger-color); vertical-align: middle; margin-left: 8px;' title='${sub.submissionReason}'></i>`;
+        }
+        // --- புதியதாக சேர்க்கப்பட்ட பகுதி END ---
+
+        attendedHtml += `<tr>
+            <td>${attendedCount++}</td>
+            <td>${student.name} ${malpracticeIndicator}</td>
+            <td>${student.register_number}</td>
+            <td>${sub.score} / ${sub.totalMarks}</td>
+            <td>${student.email}</td>
+            <td>${formattedTimeTaken}</td>
+            <td>${formattedTimeRemaining}</td>
+        </tr>`;
+    } else {
+        notAttendedHtml += `<tr>
+            <td>${notAttendedCount++}</td>
+            <td>${student.name}</td>
+            <td>${student.register_number}</td>
+            <td>${student.email}</td>
+        </tr>`;
+    }
+});
 
                         attendedBody.innerHTML = attendedHtml || `<tr><td colspan="7">No submissions yet.</td></tr>`;
                         notAttendedBody.innerHTML = notAttendedHtml || `<tr><td colspan="4">All students have attended.</td></tr>`;

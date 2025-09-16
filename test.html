@@ -86,7 +86,6 @@
         .question-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 0.75rem; overflow-y: auto; padding: 5px; }
         .palette-btn { width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 500; transition: 0.2s; position: relative; }
         
-        /* NEW & MODIFIED PALETTE STYLES */
         .palette-btn.not-visited { background-color: #e9ecef; }
         .palette-btn.not-answered { background-color: var(--danger-color); color: #fff; border-color: var(--danger-color);}
         .palette-btn.answered { background-color: var(--success-color); color: #fff; border-color: var(--success-color); }
@@ -144,6 +143,7 @@
             <button class="btn btn-primary" id="start-test-btn" disabled style="width: 100%;">Start Test</button>
         </div>
     </div>
+    
     <div class="modal-overlay" id="warning-overlay" style="display: none;">
         <div class="modal">
             <div class="icon" style="color: var(--warning-color);"><i class='bx bxs-error-alt'></i></div>
@@ -171,6 +171,7 @@
                 <div class="question-footer">
                      <button class="btn btn-secondary" id="prev-btn">Previous</button>
                      <button class="btn btn-review" id="mark-review-btn">Mark for Review</button>
+                     <button class="btn btn-secondary" id="clear-response-btn">Clear Response</button>
                      <button class="btn btn-primary" id="next-btn">Save & Next</button>
                 </div>
             </section>
@@ -209,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // Original DOM Elements
+    // DOM Elements
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const testContainer = document.getElementById('test-container');
@@ -230,22 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalOkBtn = document.getElementById('modal-ok-btn');
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
-
-    // NEW DOM Elements for Instructions & New Features
     const instructionsOverlay = document.getElementById('instructions-overlay');
     const agreeCheckbox = document.getElementById('agree-checkbox');
     const startTestBtn = document.getElementById('start-test-btn');
     const markReviewBtn = document.getElementById('mark-review-btn');
     const markedCountEl = document.getElementById('marked-count');
     const notVisitedCountEl = document.getElementById('not-visited-count');
+    const clearResponseBtn = document.getElementById('clear-response-btn');
 
-    // State Variables (Original & New)
+    // State Variables
     let questions = [], userAnswers = {}, currentQuestionIndex = 0;
     let timerInterval, testId, userId, focusLossCount = 0;
+    let isTestSubmitted = false; // To prevent multiple submissions
     const startTime = firebase.firestore.Timestamp.now();
-    let questionStates = []; // NEW: Manages the status of each question
+    let questionStates = []; 
 
-    // --- NEW: INSTRUCTIONS FLOW ---
+    // Instructions Flow
     agreeCheckbox.addEventListener('change', () => {
         startTestBtn.disabled = !agreeCheckbox.checked;
     });
@@ -253,14 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
     startTestBtn.addEventListener('click', async () => {
         instructionsOverlay.style.display = 'none';
         
-        // Request Full Screen
-        try {
-            await document.documentElement.requestFullscreen();
-        } catch(err) {
-            console.warn("Could not enter full screen mode.", err);
-        }
+        try { await document.documentElement.requestFullscreen(); } 
+        catch(err) { console.warn("Could not enter full screen mode.", err); }
         
-        loadingOverlay.style.display = 'flex'; // Show loading while fetching test
+        loadingOverlay.style.display = 'flex';
         auth.onAuthStateChanged(user => {
             if (user) {
                 userId = user.uid;
@@ -268,22 +265,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 testId = urlParams.get('testId');
                 if (!testId) return handleFatalError("Test ID not found!");
                 
-                // Check for previous submission
                 db.collection('submissions').where('userId', '==', userId).where('testId', '==', testId).limit(1).get().then(submissionQuery => {
                     if (!submissionQuery.empty) {
                         return handleFatalError("You have already completed this test.", true);
                     }
-                    startTest(testId); // Start the main test logic
+                    startTest(testId);
                 });
-
             } else {
                 window.location.href = 'index.html';
             }
         });
     });
     
-    // Original onAuthStateChanged removed as it's now inside the start button click listener.
-
     async function startTest(id) {
         try {
             const testDoc = await db.collection('tests').doc(id).get();
@@ -301,8 +294,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questions[i], questions[j]] = [questions[j], questions[i]];
             }
+            
+            questions.forEach(q => {
+                if (q.options && Array.isArray(q.options)) {
+                    for (let i = q.options.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+                    }
+                }
+            });
 
-            // NEW: Initialize question states
             questionStates = questions.map(() => ({ status: 'not-visited' }));
             
             startTimer(testData.duration);
@@ -321,46 +322,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateQuestionStatus(index, newStatus) {
-        // If a new status is explicitly provided, set it
         if (newStatus) {
             questionStates[index].status = newStatus;
             return;
         }
-
         const qId = questions[index].id;
         const isAnswered = userAnswers.hasOwnProperty(qId);
         const isMarked = questionStates[index].status === 'marked-for-review' || questionStates[index].status === 'answered-and-marked';
-
-        if (isAnswered && isMarked) {
-            questionStates[index].status = 'answered-and-marked';
-        } else if (isAnswered) {
-            questionStates[index].status = 'answered';
-        } else if (isMarked) {
-            questionStates[index].status = 'marked-for-review';
-        } else {
-             // If it's not answered or marked, it's just 'not-answered' (but visited)
-            questionStates[index].status = 'not-answered';
-        }
+        if (isAnswered && isMarked) questionStates[index].status = 'answered-and-marked';
+        else if (isAnswered) questionStates[index].status = 'answered';
+        else if (isMarked) questionStates[index].status = 'marked-for-review';
+        else questionStates[index].status = 'not-answered';
     }
 
     function renderQuestion(index) {
-        // Update status of the *previous* question before navigating away
         if (questionStates[currentQuestionIndex].status !== 'not-visited') {
             updateQuestionStatus(currentQuestionIndex);
         }
-
         currentQuestionIndex = index;
         const q = questions[index];
-        
-        // Update status of current question to 'not-answered' if it's 'not-visited'
         if(questionStates[index].status === 'not-visited') {
             updateQuestionStatus(index, 'not-answered');
         }
-
         questionNumberEl.textContent = `Question No. ${index + 1} of ${questions.length}`;
         questionTextEl.innerHTML = q.questionText;
         optionsContainer.innerHTML = '';
-        
         q.options.forEach(optionText => {
             const optionLabel = document.createElement('label');
             optionLabel.className = 'option';
@@ -384,36 +370,31 @@ document.addEventListener('DOMContentLoaded', () => {
             optionLabel.appendChild(document.createTextNode(optionText));
             optionsContainer.appendChild(optionLabel);
         });
-
         prevBtn.disabled = index === 0;
         nextBtn.textContent = (index === questions.length - 1) ? 'Save & Finish' : 'Save & Next';
         renderPalette();
     }
     
-    // MODIFIED: renderPalette to handle new states
     function renderPalette() {
         paletteContainer.innerHTML = '';
         questions.forEach((q, index) => {
             const btn = document.createElement('button');
             btn.className = 'palette-btn';
             btn.textContent = index + 1;
-            
             const status = questionStates[index].status;
             switch(status) {
                 case 'answered': btn.classList.add('answered'); break;
                 case 'not-answered': btn.classList.add('not-answered'); break;
                 case 'marked-for-review': btn.classList.add('marked-for-review'); break;
                 case 'answered-and-marked': btn.classList.add('answered-and-marked'); break;
-                default: btn.classList.add('not-visited'); // not-visited
+                default: btn.classList.add('not-visited');
             }
-            
             if (index === currentQuestionIndex) btn.classList.add('current');
             btn.addEventListener('click', () => renderQuestion(index));
             paletteContainer.appendChild(btn);
         });
     }
 
-    // MODIFIED: updateSummary to count all states
     function updateSummary() {
         let answered = 0, notAnswered = 0, marked = 0, notVisited = 0;
         questionStates.forEach(state => {
@@ -421,12 +402,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'answered': answered++; break;
                 case 'answered-and-marked': answered++; marked++; break;
                 case 'not-answered': notAnswered++; break;
-                case 'marked-for-review': marked++; break;
+                case 'marked-for-review': marked++; notAnswered++; break;
                 case 'not-visited': notVisited++; break;
             }
         });
         answeredCountEl.textContent = answered;
-        notAnsweredCountEl.textContent = notAnswered;
+        notAnsweredCountEl.textContent = notAnswered + notVisited;
         markedCountEl.textContent = marked;
         notVisitedCountEl.textContent = notVisited;
     }
@@ -437,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 timerDisplay.textContent = "00:00";
-                showCustomAlert("Time's up! Your test will be submitted automatically.", () => submitTest("Time's up"));
+                submitTest("Time's up");
                 return;
             }
             timeLeft--;
@@ -445,6 +426,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const seconds = (timeLeft % 60).toString().padStart(2, '0');
             timerDisplay.textContent = `${minutes}:${seconds}`;
         }, 1000);
+    }
+    
+    function attemptSubmission() {
+        const unansweredCount = questions.length - Object.keys(userAnswers).length;
+        if (unansweredCount > 0) {
+            showCustomAlert(`You have ${unansweredCount} unanswered question(s). Please answer all questions before submitting.`);
+        } else {
+            showCustomConfirm('Are you sure you want to submit the test?', () => submitTest("User submission"));
+        }
     }
 
     prevBtn.addEventListener('click', () => {
@@ -455,34 +445,49 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentQuestionIndex < questions.length - 1) {
             renderQuestion(currentQuestionIndex + 1);
         } else {
-            updateQuestionStatus(currentQuestionIndex); // Update status of last question
-            showCustomConfirm('This is the last question. Are you sure you want to submit?', () => submitTest("User submission"));
+            attemptSubmission();
         }
     });
 
     submitBtn.addEventListener('click', () => {
-        showCustomConfirm('Are you sure you want to submit the test now?', () => submitTest("User submission"));
+        attemptSubmission();
     });
 
-    // NEW: Mark for Review button functionality
     markReviewBtn.addEventListener('click', () => {
         const currentStatus = questionStates[currentQuestionIndex].status;
-        
-        // Toggle mark status
+        const isAnswered = userAnswers.hasOwnProperty(questions[currentQuestionIndex].id);
         if (currentStatus === 'marked-for-review' || currentStatus === 'answered-and-marked') {
-            // Unmark it
-            const isAnswered = userAnswers.hasOwnProperty(questions[currentQuestionIndex].id);
             updateQuestionStatus(currentQuestionIndex, isAnswered ? 'answered' : 'not-answered');
         } else {
-            // Mark it
-            const isAnswered = userAnswers.hasOwnProperty(questions[currentQuestionIndex].id);
             updateQuestionStatus(currentQuestionIndex, isAnswered ? 'answered-and-marked' : 'marked-for-review');
         }
         renderPalette();
         updateSummary();
     });
+    
+    clearResponseBtn.addEventListener('click', () => {
+        const qId = questions[currentQuestionIndex].id;
+        if (userAnswers.hasOwnProperty(qId)) {
+            delete userAnswers[qId];
+            updateQuestionStatus(currentQuestionIndex);
+            renderQuestion(currentQuestionIndex);
+            updateSummary();
+        }
+    });
 
     async function submitTest(reason = null) {
+        if (isTestSubmitted) return; // Prevent multiple calls
+        isTestSubmitted = true;
+
+        const isForcedSubmission = reason === "Time's up" || (reason && reason.startsWith("Malpractice"));
+        const unansweredCount = questions.length - Object.keys(userAnswers).length;
+
+        if (unansweredCount > 0 && !isForcedSubmission) {
+            isTestSubmitted = false; // Allow user to try again
+            showCustomAlert(`You have ${unansweredCount} unanswered question(s). Please answer all questions before submitting.`);
+            return;
+        }
+
         clearInterval(timerInterval);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -490,37 +495,28 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay.style.display = 'flex';
         loadingText.textContent = 'Submitting... Please do not close this window.';
         
-        let score = 0, correctAnswers = 0, incorrectAnswers = 0;
+        let score = 0;
         questions.forEach(q => {
-            if (userAnswers.hasOwnProperty(q.id)) { // Check if question was answered
-                if (userAnswers[q.id] === q.correctAnswer) {
-                    correctAnswers++;
-                } else {
-                    incorrectAnswers++;
-                }
-            }
+            if (userAnswers[q.id] === q.correctAnswer) score++;
         });
-        
-        // Assuming 1 mark for correct, 0 for incorrect/unanswered
-        score = correctAnswers;
         
         try {
             const submissionData = {
                 userId: userId, testId: testId, answers: userAnswers, score: score,
                 totalMarks: questions.length, startTime: startTime,
                 endTime: firebase.firestore.FieldValue.serverTimestamp(), status: 'Completed',
-                questionStates: questionStates // Storing the final states for review
             };
             if(reason) submissionData.submissionReason = reason;
             await db.collection('submissions').add(submissionData);
             
-            showCustomAlert(`Test submitted successfully! Your score is ${score} out of ${questions.length}.`, () => {
-                if (document.fullscreenElement) {
-                   document.exitFullscreen();
-                }
+            const finalAlertCallback = () => {
+                if (document.fullscreenElement) document.exitFullscreen();
                 window.location.href = 'assessments.html';
-            });
+            };
+            showCustomAlert(`Test submitted successfully! Your score is ${score} out of ${questions.length}.`, finalAlertCallback);
+
         } catch (error) {
+            isTestSubmitted = false; // Allow retry on error
             handleFatalError("There was an error submitting your test: " + error.message, true);
         }
     }
@@ -536,12 +532,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // NEW: Full Screen Change Handler
     function handleFullscreenChange() {
         if (!document.fullscreenElement) {
-            showCustomAlert("You have exited full-screen mode. This is not allowed. Please re-enter full-screen mode to continue.");
-            // Optionally, you can force submit here as well for stricter proctoring.
-            // submitTest("Malpractice: Exited full-screen mode.");
+            showCustomAlert("You have exited full-screen mode. This is not allowed. Re-entering full-screen automatically.");
+            try { document.documentElement.requestFullscreen(); } catch(e) {}
         }
     }
 

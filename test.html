@@ -34,7 +34,8 @@
         
         .modal {
             background: var(--card-bg); padding: 2rem; border-radius: 1rem;
-            text-align: center; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center; max-width: 400px; width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transform: scale(0.9); animation: modal-pop 0.3s ease forwards;
         }
         @keyframes modal-pop { to { transform: scale(1); } }
@@ -77,6 +78,64 @@
         .palette-btn.answered { background: var(--success-color); color: #fff; border-color: var(--success-color); }
         .palette-btn.current { border-width: 2px; border-color: var(--primary-color); transform: scale(1.1); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ================== MEDIA QUERIES FOR RESPONSIVENESS ================== */
+
+        /* For Tablets and smaller devices */
+        @media (max-width: 992px) {
+            .test-body {
+                flex-direction: column; /* Stack question and palette vertically */
+                padding: 1rem;
+                overflow-y: auto; /* Allow the entire body to scroll */
+            }
+            .question-area {
+                padding: 1.5rem;
+            }
+            .palette-area {
+                width: 100%; /* Make palette full width */
+                min-width: unset; /* Remove fixed min-width */
+                max-height: 350px; /* Give a max-height to avoid excessive length */
+            }
+            .question-text {
+                font-size: 1rem; /* Adjust font size for better fit */
+            }
+        }
+
+        /* For Small Mobile Phones */
+        @media (max-width: 576px) {
+            .test-header {
+                flex-direction: column; /* Stack header items */
+                align-items: flex-start;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            .test-title h2 {
+                font-size: 1.1rem;
+            }
+            .timer-container {
+                align-self: flex-start;
+            }
+            .btn-submit {
+                width: 100%;
+            }
+            .question-header h3 {
+                font-size: 1rem;
+            }
+            .option {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+            .question-footer {
+                flex-direction: column; /* Stack footer buttons */
+                gap: 0.75rem;
+            }
+            .question-footer .btn {
+                width: 100%; /* Make footer buttons full-width */
+            }
+            .modal {
+                padding: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -134,12 +193,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
           apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-  projectId: "student-central-hub-5w4l8",
-  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-  messagingSenderId: "379433916597",
-  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-};
+          authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+          projectId: "student-central-hub-5w4l8",
+          storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+          messagingSenderId: "379433916597",
+          appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
 
 
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 

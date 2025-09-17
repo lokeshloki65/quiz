@@ -29,6 +29,9 @@
         .nav-link:hover, .nav-link.active { background-color: rgba(123, 104, 238, 0.2); color: #fff; }
         .nav-icon { font-size: 1.4rem; margin-right: 1rem; }
         .main-content { flex-grow: 1; overflow-y: auto; padding: 2rem; }
+        .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
+        .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
+        
         .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
         .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: var(--transition-speed); display: inline-flex; align-items: center; gap: 0.5rem; }
@@ -103,6 +106,11 @@
             <li><a href="#" class="nav-link" data-view="students-view"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
             <li><a href="#" class="nav-link" data-view="posts-view"><i class='bx bxs-news nav-icon'></i>Posts Management</a></li>
             <li><a href="leaderboard.html" class="nav-link"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
+            <div class="sidebar-footer">
+                <button class="logout-btn nav-link" id="logout-btn">
+                    <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
+                </button>
+            </div>
         </ul>
     </aside>
     <main class="main-content">
@@ -545,7 +553,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 attendedBody.innerHTML = `<tr><td colspan="7" style="color:red;">Could not load student data.</td></tr>`;
             }
         };
-        
+          const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    console.log('User signed out successfully.');
+                    window.location.href = 'index.html'; // Logout செய்த பிறகு login பக்கத்திற்கு அனுப்பவும்
+                }).catch((error) => {
+                    console.error('Sign out error', error);
+                    alert('Logout செய்யும்போது பிழை ஏற்பட்டது.');
+                });
+            });
+        }
         function updateScoreChart({ labels, data }) {
             const ctx = document.getElementById('score-chart').getContext('2d');
             if (scoreChartInstance) scoreChartInstance.destroy();
@@ -831,7 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPosts();
     }
 });
-    // Right-click செய்வதை முடக்குகிறது
+// Right-click செய்வதை முடக்குகிறது
         document.addEventListener('contextmenu', function(e) {
           e.preventDefault();
         });
@@ -854,4 +873,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-

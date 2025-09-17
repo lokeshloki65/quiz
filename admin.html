@@ -101,6 +101,7 @@
             <li><a href="#" class="nav-link active" data-view="dashboard-view"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
             <li><a href="#" class="nav-link" data-view="tests-view"><i class='bx bxs-spreadsheet nav-icon'></i>Test Management</a></li>
             <li><a href="#" class="nav-link" data-view="students-view"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
+            <li><a href="#" class="nav-link" data-view="posts-view"><i class='bx bxs-news nav-icon'></i>Posts Management</a></li>
             <li><a href="leaderboard.html" class="nav-link"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
         </ul>
     </aside>
@@ -186,6 +187,24 @@
                     </table>
                 </div>
             </div>
+             <div id="posts-view">
+                <div class="card">
+                    <h3>All Student Posts</h3>
+                    <table id="posts-table">
+                        <thead>
+                            <tr>
+                                <th>Author</th>
+                                <th>Register No.</th>
+                                <th style="width: 30%;">Description</th>
+                                <th>Image</th>
+                                <th>Posted On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -199,7 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
         apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
         authDomain: "student-central-hub-5w4l8.firebaseapp.com",
         projectId: "student-central-hub-5w4l8",
-        storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+        // storageBucket மாற்றப்பட்டுள்ளது
+        storageBucket: "student-central-hub-5w4l8.appspot.com",
         messagingSenderId: "379433916597",
         appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
     };
@@ -248,9 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     link.classList.toggle('active', linkView === viewId);
                 }
             });
-            const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'results-view': 'Test Results'};
+            // viewTitles மாற்றப்பட்டுள்ளது
+            const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'posts-view': 'Posts Management', 'results-view': 'Test Results'};
             pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
-            headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view') ? 'none' : 'block';
+            // headerActionBtn தர்க்கம் மாற்றப்பட்டுள்ளது
+            headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view' || viewId === 'posts-view') ? 'none' : 'block';
             headerActionBtn.innerHTML = "<i class='bx bx-plus'></i> Create New Test";
 
             if (viewId !== 'create-test-view') {
@@ -374,11 +396,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const formattedStartTime = startTime ? startTime.toLocaleString() : 'N/A';
                     const formattedEndTime = endTime ? endTime.toLocaleString() : 'N/A';
                     html += `<tr><td>${t.title}</td><td>${formattedStartTime}</td><td>${formattedEndTime}</td><td><span class="status-badge ${statusClass}">${status}</span></td>
-                        <td>
-                            <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="viewResults('${doc.id}', '${t.title.replace(/'/g, "\\'")}')">Results</button>
-                            <button class="action-btn btn-edit" title="Edit Test" onclick="editTest('${doc.id}')"><i class='bx bxs-edit'></i></button>
-                            <button class="action-btn btn-delete" title="Delete Test" onclick="deleteTest('${doc.id}')"><i class='bx bxs-trash'></i></button>
-                        </td></tr>`;
+                            <td>
+                                <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="viewResults('${doc.id}', '${t.title.replace(/'/g, "\\'")}')">Results</button>
+                                <button class="action-btn btn-edit" title="Edit Test" onclick="editTest('${doc.id}')"><i class='bx bxs-edit'></i></button>
+                                <button class="action-btn btn-delete" title="Delete Test" onclick="deleteTest('${doc.id}')"><i class='bx bxs-trash'></i></button>
+                            </td></tr>`;
                 });
                 tableBody.innerHTML = html;
             });
@@ -411,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) { console.error("Error fetching test for edit:", error); alert("Could not load test data."); }
         };
 
-        // --- MODIFIED RESULTS VIEW LOGIC ---
         window.viewResults = async function(testId, testTitle) {
             switchView('results-view');
             document.getElementById('results-test-title').textContent = testTitle;
@@ -460,59 +481,55 @@ document.addEventListener('DOMContentLoaded', () => {
                         let attendedCount = 1, notAttendedCount = 1;
                         const scoreDistribution = [0, 0, 0, 0, 0];
 
-                        // இதை புதிய Code-ஆக மாற்றவும்
-allStudents.forEach((student, uid) => {
-    if (attendedStudentIds.has(uid)) {
-        const sub = submissions.get(uid);
-        if (!sub.startTime || !sub.endTime) return;
+                        allStudents.forEach((student, uid) => {
+                            if (attendedStudentIds.has(uid)) {
+                                const sub = submissions.get(uid);
+                                if (!sub.startTime || !sub.endTime) return;
 
-        const scorePercent = maxScore > 0 ? (sub.score / maxScore) * 100 : 0;
-        
-        if (scorePercent <= 20) scoreDistribution[0]++;
-        else if (scorePercent <= 40) scoreDistribution[1]++;
-        else if (scorePercent <= 60) scoreDistribution[2]++;
-        else if (scorePercent <= 80) scoreDistribution[3]++;
-        else scoreDistribution[4]++;
+                                const scorePercent = maxScore > 0 ? (sub.score / maxScore) * 100 : 0;
+                                
+                                if (scorePercent <= 20) scoreDistribution[0]++;
+                                else if (scorePercent <= 40) scoreDistribution[1]++;
+                                else if (scorePercent <= 60) scoreDistribution[2]++;
+                                else if (scorePercent <= 80) scoreDistribution[3]++;
+                                else scoreDistribution[4]++;
 
-        const startTime = sub.startTime.toDate();
-        const endTime = sub.endTime.toDate();
-        const timeTakenInMillis = endTime - startTime;
-        const minutesTaken = Math.floor(timeTakenInMillis / 60000);
-        const secondsTaken = Math.floor((timeTakenInMillis % 60000) / 1000);
-        const formattedTimeTaken = `${minutesTaken}m ${secondsTaken}s`;
+                                const startTime = sub.startTime.toDate();
+                                const endTime = sub.endTime.toDate();
+                                const timeTakenInMillis = endTime - startTime;
+                                const minutesTaken = Math.floor(timeTakenInMillis / 60000);
+                                const secondsTaken = Math.floor((timeTakenInMillis % 60000) / 1000);
+                                const formattedTimeTaken = `${minutesTaken}m ${secondsTaken}s`;
 
-        const totalDurationInMillis = testDurationInMinutes * 60000;
-        const timeRemainingInMillis = Math.max(0, totalDurationInMillis - timeTakenInMillis);
-        const minutesRemaining = Math.floor(timeRemainingInMillis / 60000);
-        const secondsRemaining = Math.floor((timeRemainingInMillis % 60000) / 1000);
-        const formattedTimeRemaining = `${minutesRemaining}m ${secondsRemaining}s`;
+                                const totalDurationInMillis = testDurationInMinutes * 60000;
+                                const timeRemainingInMillis = Math.max(0, totalDurationInMillis - timeTakenInMillis);
+                                const minutesRemaining = Math.floor(timeRemainingInMillis / 60000);
+                                const secondsRemaining = Math.floor((timeRemainingInMillis % 60000) / 1000);
+                                const formattedTimeRemaining = `${minutesRemaining}m ${secondsRemaining}s`;
 
-        // --- புதியதாக சேர்க்கப்பட்ட பகுதி START ---
-        let malpracticeIndicator = '';
-        // சப்மிஷன் காரணம் 'Malpractice' ஆக இருந்தால், எச்சரிக்கை குறியை உருவாக்குகிறோம்
-        if (sub.submissionReason && sub.submissionReason.startsWith("Malpractice")) {
-            malpracticeIndicator = `<i class='bx bxs-error-circle' style='color: var(--danger-color); vertical-align: middle; margin-left: 8px;' title='${sub.submissionReason}'></i>`;
-        }
-        // --- புதியதாக சேர்க்கப்பட்ட பகுதி END ---
-
-        attendedHtml += `<tr>
-            <td>${attendedCount++}</td>
-            <td>${student.name} ${malpracticeIndicator}</td>
-            <td>${student.register_number}</td>
-            <td>${sub.score} / ${sub.totalMarks}</td>
-            <td>${student.email}</td>
-            <td>${formattedTimeTaken}</td>
-            <td>${formattedTimeRemaining}</td>
-        </tr>`;
-    } else {
-        notAttendedHtml += `<tr>
-            <td>${notAttendedCount++}</td>
-            <td>${student.name}</td>
-            <td>${student.register_number}</td>
-            <td>${student.email}</td>
-        </tr>`;
-    }
-});
+                                let malpracticeIndicator = '';
+                                if (sub.submissionReason && sub.submissionReason.startsWith("Malpractice")) {
+                                    malpracticeIndicator = `<i class='bx bxs-error-circle' style='color: var(--danger-color); vertical-align: middle; margin-left: 8px;' title='${sub.submissionReason}'></i>`;
+                                }
+                               
+                                attendedHtml += `<tr>
+                                    <td>${attendedCount++}</td>
+                                    <td>${student.name} ${malpracticeIndicator}</td>
+                                    <td>${student.register_number}</td>
+                                    <td>${sub.score} / ${sub.totalMarks}</td>
+                                    <td>${student.email}</td>
+                                    <td>${formattedTimeTaken}</td>
+                                    <td>${formattedTimeRemaining}</td>
+                                </tr>`;
+                            } else {
+                                notAttendedHtml += `<tr>
+                                    <td>${notAttendedCount++}</td>
+                                    <td>${student.name}</td>
+                                    <td>${student.register_number}</td>
+                                    <td>${student.email}</td>
+                                </tr>`;
+                            }
+                        });
 
                         attendedBody.innerHTML = attendedHtml || `<tr><td colspan="7">No submissions yet.</td></tr>`;
                         notAttendedBody.innerHTML = notAttendedHtml || `<tr><td colspan="4">All students have attended.</td></tr>`;
@@ -654,6 +671,62 @@ allStudents.forEach((student, uid) => {
             return questions;
         }
 
+        // --- புதியதாக சேர்க்கப்பட்ட செயல்பாடுகள் START ---
+        function loadPosts() {
+            const tableBody = document.querySelector('#posts-table tbody');
+            db.collection('student_posts').orderBy('timestamp', 'desc')
+              .onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No student posts found.</td></tr>';
+                    return;
+                }
+                let html = '';
+                snapshot.forEach(doc => {
+                    const post = doc.data();
+                    const postDate = post.timestamp ? post.timestamp.toDate().toLocaleString() : 'N/A';
+                    html += `
+                        <tr>
+                            <td>${escapeHTML(post.userName)}</td>
+                            <td>${escapeHTML(post.registerNumber) || 'N/A'}</td>
+                            <td style="white-space: pre-wrap; max-width: 300px; word-break: break-word;">${escapeHTML(post.description)}</td>
+                            <td>
+                                <a href="${post.imageUrl}" target="_blank" rel="noopener noreferrer">
+                                    <img src="${post.imageUrl}" width="80" style="border-radius: 8px;" alt="Post Image">
+                                </a>
+                            </td>
+                            <td>${postDate}</td>
+                            <td>
+                                <button class="action-btn btn-delete" title="Delete Post" onclick="deletePost('${doc.id}')">
+                                    <i class='bx bxs-trash'></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                tableBody.innerHTML = html;
+            }, error => {
+                console.error("Error fetching posts:", error);
+                tableBody.innerHTML = '<tr><td colspan="6" style="color:red; text-align:center;">Error loading posts.</td></tr>';
+            });
+        }
+
+        window.deletePost = async function(postId) {
+            if (confirm('Are you sure you want to permanently delete this post?')) {
+                try {
+                    await db.collection('student_posts').doc(postId).delete();
+                    alert('Post deleted successfully.');
+                } catch (error) {
+                    console.error("Error deleting post:", error);
+                    alert('Failed to delete post.');
+                }
+            }
+        };
+
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+        }
+        // --- புதியதாக சேர்க்கப்பட்ட செயல்பாடுகள் END ---
+
         // --- Student Import Logic ---
         const importBtn = document.getElementById('import-students-btn');
         const importFile = document.getElementById('student-import-file');
@@ -743,11 +816,12 @@ allStudents.forEach((student, uid) => {
         mobileSidebarToggle.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); });
         overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
 
-        // Initial Load
+        // Initial Load - மாற்றப்பட்டுள்ளது
         loadDashboardStats();
         loadSubmissionsChart();
         loadTests();
         loadStudents();
+        loadPosts(); // Posts load function is called here
     }
 });
 </script>

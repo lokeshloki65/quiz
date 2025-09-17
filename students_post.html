@@ -28,32 +28,24 @@
 
         .app-container { display: flex; width: 100vw; height: 100vh; }
 
-        /* ======== SIDEBAR STYLES (Same as Dashboard) ======== */
+        /* ======== SIDEBAR STYLES ======== */
         .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; padding: 1.5rem 1rem; display: flex; flex-direction: column; transition: width var(--transition-speed); z-index: 1000; }
-        .sidebar.collapsed { width: 88px; }
         .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; padding: 0 0.5rem; }
         .sidebar-header .logo-icon { font-size: 2rem; color: var(--primary-color); }
-        .sidebar-header .logo-text { font-size: 1.5rem; font-weight: 600; white-space: nowrap; opacity: 1; transition: opacity 0.2s, width 0.2s; }
-        .sidebar.collapsed .logo-text { opacity: 0; width: 0; display: none; }
+        .sidebar-header .logo-text { font-size: 1.5rem; font-weight: 600; white-space: nowrap; }
         .sidebar-nav { list-style: none; flex-grow: 1; }
-        .nav-item { margin-bottom: 0.5rem; position: relative; }
+        .nav-item { margin-bottom: 0.5rem; }
         .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #94a3b8; text-decoration: none; transition: var(--transition-speed); white-space: nowrap; }
         .nav-link:hover, .nav-link.active { background-color: rgba(106, 90, 249, 0.2); color: #ffffff; }
-        .nav-link .nav-icon { font-size: 1.4rem; margin-right: 1rem; min-width: 24px; text-align: center; transition: margin var(--transition-speed); }
-        .sidebar.collapsed .nav-link { justify-content: center; }
-        .sidebar.collapsed .nav-link .nav-icon { margin-right: 0; }
-        .sidebar.collapsed .nav-text { display: none; }
-        .tooltip { position: absolute; left: 100%; top: 50%; transform: translateY(-50%) translateX(-10px); background-color: #fff; color: var(--heading-color); padding: 0.5rem 1rem; border-radius: 0.5rem; white-space: nowrap; box-shadow: var(--shadow); z-index: 10; font-weight: 500; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
-        .sidebar.collapsed .nav-item:hover .tooltip { visibility: visible; opacity: 1; transform: translateX(0); }
+        .nav-link .nav-icon { font-size: 1.4rem; margin-right: 1rem; min-width: 24px; text-align: center; }
         .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
         .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
         
-        /* ======== MAIN CONTENT & AI BACKGROUND ======== */
+        /* ======== MAIN CONTENT ======== */
         .main-content { 
             flex: 1; 
             padding: 2rem; 
             overflow-y: auto; 
-            position: relative;
             background: linear-gradient(315deg, #f0f2f5 0%, #e6e9ff 74%);
             animation: gradient-animation 15s ease infinite;
             background-size: 400% 400%;
@@ -95,18 +87,57 @@
         .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         .post-author-info .author-name { font-weight: 600; color: var(--heading-color); }
         .post-author-info .post-timestamp { font-size: 0.8rem; color: var(--text-color); }
-
         .post-content .post-description {
             padding: 0 1.5rem 1rem;
-            white-space: pre-wrap; /* To respect newlines in description */
+            white-space: pre-wrap;
             color: var(--text-color);
         }
         .post-content .post-image {
             width: 100%;
             max-height: 500px;
-            object-fit: contain; /* Changed to contain to see the full image */
-            background-color: #f8f9fa; /* Added background for letterboxed images */
+            object-fit: contain;
+            background-color: #f8f9fa;
         }
+
+        .post-links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 0 1.5rem 1rem 1.5rem;
+        }
+        .post-link-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background-color: #f0f2f5;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: var(--heading-color);
+            font-weight: 500;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .post-link-box:hover {
+            background-color: #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .post-link-box i {
+            font-size: 1.5rem;
+            color: #1a202c;
+        }
+        .post-link-box.portfolio-link {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .post-link-box.portfolio-link:hover {
+            background-color: #5243e0;
+        }
+        .post-link-box.portfolio-link i, .post-link-box.portfolio-link span {
+            color: white;
+        }
+
 
         .post-actions {
             display: flex;
@@ -124,7 +155,6 @@
         .action-btn:hover { background-color: #f0f2f5; }
         .action-btn.liked { color: var(--primary-color); font-weight: 700; }
         .action-btn i { font-size: 1.25rem; }
-
         .comments-section {
             padding: 0 1.5rem 1rem;
             border-top: 1px solid var(--border-color);
@@ -141,18 +171,12 @@
         /* ======== ADD POST BUTTON & MODAL ======== */
         .add-post-btn {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 56px;
-            height: 56px;
+            bottom: 2rem; right: 2rem;
+            width: 56px; height: 56px;
             background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
+            color: white; border: none; border-radius: 50%;
             font-size: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(106, 90, 249, 0.4);
             transition: transform 0.2s, background-color 0.2s;
@@ -171,49 +195,63 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 2000;
             opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+            padding: 1rem; /* Added padding for mobile */
         }
         .modal-overlay.show { opacity: 1; visibility: visible; }
         .modal-content {
             background: var(--card-bg);
-            padding: 2rem;
             border-radius: var(--border-radius);
-            width: 90%;
+            width: 100%; /* Changed from 90% */
             max-width: 500px;
             transform: scale(0.95);
             transition: transform 0.3s;
+            display: flex; /* Added for layout */
+            flex-direction: column; /* Added for layout */
+            max-height: 90vh; /* Set a max height */
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-title { font-size: 1.5rem; color: var(--heading-color); }
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 1.25rem; color: var(--heading-color); }
         .close-modal-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: var(--text-color); }
         
-        .form-group { margin-bottom: 1.5rem; }
-        .form-group textarea {
-            width: 100%;
-            height: 120px;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
-            resize: vertical;
-            font-family: 'Poppins', sans-serif;
+        /* FIXED: Make modal body scrollable */
+        .modal-body {
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
         }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-weight: 500; margin-bottom: 0.5rem; color: var(--heading-color);
+        }
+        .form-group textarea, .form-group input[type="url"] {
+            width: 100%; padding: 0.75rem; border-radius: 0.5rem;
+            border: 1px solid var(--border-color); font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+        .form-group textarea { height: 120px; resize: vertical; }
+
         .image-preview-container {
-            width: 100%;
-            min-height: 150px;
-            border: 2px dashed var(--border-color);
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            color: var(--text-color);
+            width: 100%; min-height: 150px; border: 2px dashed var(--border-color);
+            border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-direction: column;
+            cursor: pointer; position: relative; overflow: hidden; color: var(--text-color);
         }
         #image-preview { max-width: 100%; max-height: 250px; }
         #image-upload { display: none; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; }
+
+        /* FIXED: Make modal actions sticky to the bottom */
+        .modal-actions {
+            display: flex; justify-content: flex-end; gap: 1rem;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+        }
+
         .btn {
             padding: 0.75rem 1.5rem; border-radius: 0.5rem;
             border: none; font-weight: 600; cursor: pointer;
@@ -226,13 +264,9 @@
         .btn-secondary:hover { background-color: #cbd5e1; }
         
         .loader {
-            width: 20px;
-            height: 20px;
-            border: 3px solid #FFF;
-            border-bottom-color: transparent;
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
+            width: 20px; height: 20px; border: 3px solid #FFF;
+            border-bottom-color: transparent; border-radius: 50%;
+            display: inline-block; box-sizing: border-box;
             animation: rotation 1s linear infinite;
         }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -242,13 +276,14 @@
             .sidebar { position: fixed; left: -260px; height: 100%; }
             .sidebar.open { left: 0; }
             .main-content { margin-left: 0; }
-            .sidebar-toggle { display: none; }
-            .mobile-sidebar-toggle { display: block; color: var(--text-color); }
+            .mobile-sidebar-toggle { display: block; }
         }
         @media (max-width: 768px) {
             .main-content { padding: 1rem; }
-            .posts-container { grid-template-columns: 1fr; } /* Single column on smaller screens */
+            .posts-container { grid-template-columns: 1fr; }
             .add-post-btn { bottom: 1rem; right: 1rem; }
+            .modal-header, .modal-body, .modal-actions { padding: 1rem; } /* Reduce padding on mobile */
+            .modal-title { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -262,25 +297,20 @@
             <ul class="sidebar-nav">
                 <li class="nav-item">
                     <a href="dashboard.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
-                    <span class="tooltip">Dashboard</span>
                 </li>
                 <li class="nav-item">
                     <a href="students_post.html" class="nav-link active"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
-                    <span class="tooltip">Students Post</span>
                 </li>
                 <li class="nav-item">
                     <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
-                    <span class="tooltip">Assessments</span>
                 </li>
                 <li class="nav-item">
                     <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
-                    <span class="tooltip">Profile</span>
                 </li>
             </ul>
             <div class="sidebar-footer">
                 <button class="logout-btn nav-link" id="logout-btn">
                     <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
-                    <span class="tooltip">Log Out</span>
                 </button>
             </div>
         </aside>
@@ -288,7 +318,7 @@
         <main class="main-content" id="main-content">
             <header class="main-header">
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button class="sidebar-toggle mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
+                    <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
                     <h2 class="page-title">Community Feed</h2>
                 </div>
                 <a href="profile.html" class="profile-dropdown">
@@ -313,52 +343,68 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <textarea id="post-description" placeholder="Share something about your achievement... (e.g., project name, course details)"></textarea>
+                    <label for="post-description" class="form-label">Description</label>
+                    <textarea id="post-description" placeholder="Share something about your achievement..."></textarea>
                 </div>
+
                 <div class="form-group">
+                    <label for="post-github-link" class="form-label">
+                        <i class='bx bxl-github'></i> GitHub Link (Optional)
+                    </label>
+                    <input type="url" id="post-github-link" placeholder="https://github.com/your-username/your-repo">
+                </div>
+
+                <div class="form-group">
+                    <label for="post-portfolio-link" class="form-label">
+                        <i class='bx bx-link-external'></i> Portfolio Link (Optional)
+                    </label>
+                    <input type="url" id="post-portfolio-link" placeholder="https://your-portfolio.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="image-upload" class="form-label">Certificate / Project Image</label>
                     <input type="file" id="image-upload" accept="image/*">
                     <label for="image-upload" class="image-preview-container" id="image-preview-container">
                         <img id="image-preview" src="" alt="Image Preview" style="display: none;">
                         <span class="image-preview-text" id="image-preview-text">
                             <i class='bx bx-cloud-upload' style="font-size: 2rem;"></i><br>
-                            Click to upload a certificate or project image
+                            Click to upload an image
                         </span>
                     </label>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" id="cancel-post-btn">Cancel</button>
-                    <button class="btn btn-primary" id="submit-post-btn" disabled>
-                        <span id="post-btn-text">Post</span>
-                        <div class="loader" id="post-loader" style="display: none;"></div>
-                    </button>
-                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancel-post-btn">Cancel</button>
+                <button class="btn btn-primary" id="submit-post-btn" disabled>
+                    <span id="post-btn-text">Post</span>
+                    <div class="loader" id="post-loader" style="display: none;"></div>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. CLOUDINARY CONFIGURATION (REPLACE WITH YOUR DETAILS) ---
-        const CLOUDINARY_CLOUD_NAME = "dk7tldvvb"; // <-- Paste your Cloud Name here
-        const CLOUDINARY_UPLOAD_PRESET = "students_post."; // <-- Paste your Upload Preset Name here
+        // --- 1. CLOUDINARY CONFIGURATION ---
+        const CLOUDINARY_CLOUD_NAME = "dk7tldvvb"; 
+        const CLOUDINARY_UPLOAD_PRESET = "students_post.";
 
         // --- 2. FIREBASE INITIALIZATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
             authDomain: "student-central-hub-5w4l8.firebaseapp.com",
             projectId: "student-central-hub-5w4l8",
-            storageBucket: "student-central-hub-5w4l8.appspot.com", // Corrected storage bucket domain
+            storageBucket: "student-central-hub-5w4l8.appspot.com",
             messagingSenderId: "379433916597",
             appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
         };
-        try {
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        } catch (e) { console.error("Firebase init error", e); }
+        try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
+        catch (e) { console.error("Firebase init error", e); }
         const db = firebase.firestore();
         const auth = firebase.auth();
         
-        // --- 3. GLOBAL VARIABLES & UI ELEMENTS ---
-        let currentUser = null; // This will hold all user info (auth + firestore)
+        // --- 3. UI ELEMENTS ---
+        let currentUser = null;
         const postsContainer = document.getElementById('posts-container');
         const modal = document.getElementById('add-post-modal');
         const addPostBtn = document.getElementById('add-post-btn');
@@ -369,6 +415,8 @@
         const imagePreview = document.getElementById('image-preview');
         const imagePreviewText = document.getElementById('image-preview-text');
         const postDescriptionInput = document.getElementById('post-description');
+        const githubLinkInput = document.getElementById('post-github-link');
+        const portfolioLinkInput = document.getElementById('post-portfolio-link');
 
         // --- 4. AUTHENTICATION & INITIALIZATION ---
         auth.onAuthStateChanged(user => {
@@ -381,49 +429,39 @@
         });
 
         function loadUserProfile(user) {
-            const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E`;
+            const defaultAvatar = `https://api.dicebear.com/8.x/initials/svg?seed=${user.displayName || 'AU'}`;
             db.collection('users').doc(user.uid).get().then(doc => {
                 if(doc.exists) {
                     const userData = doc.data();
-                    // Combine auth data and firestore data into one object
                     currentUser = {
                         uid: user.uid,
                         displayName: userData.name || 'Anonymous User',
                         photoURL: userData.profilePicUrl || defaultAvatar,
-                        registerNumber: userData.registerNumber || '' // Fetch register number
+                        registerNumber: userData.registerNumber || ''
                     };
-                    document.getElementById('profile-img').src = currentUser.photoURL;
                 } else {
-                     console.warn("User doc not in Firestore. Using auth details.");
                     currentUser = {
                         uid: user.uid,
                         displayName: user.displayName || 'Anonymous User',
                         photoURL: user.photoURL || defaultAvatar,
                         registerNumber: ''
                     };
-                    document.getElementById('profile-img').src = currentUser.photoURL;
                 }
-                // IMPORTANT: Enable posting only after user profile is fully loaded
+                document.getElementById('profile-img').src = currentUser.photoURL;
                 addPostBtn.disabled = false;
                 addPostBtn.title = 'Create a new post';
-            }).catch(error => {
-                console.error("Error fetching user profile:", error);
-                // Keep button disabled if there's an error
-                addPostBtn.title = 'Error loading profile. Cannot post.';
-            });
+            }).catch(error => console.error("Error fetching user profile:", error));
         }
         
-        // --- 5. FETCH AND RENDER POSTS IN REAL-TIME ---
+        // --- 5. FETCH AND RENDER POSTS ---
         function fetchPosts() {
             db.collection('student_posts').orderBy('timestamp', 'desc')
                 .onSnapshot(snapshot => {
-                    postsContainer.innerHTML = ''; // Clear existing posts
+                    postsContainer.innerHTML = '';
                     if(snapshot.empty) {
                         postsContainer.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">No posts yet. Be the first to share something!</p>';
                     }
-                    snapshot.forEach(doc => {
-                        renderPost(doc.id, doc.data());
-                    });
+                    snapshot.forEach(doc => renderPost(doc.id, doc.data()));
                 });
         }
 
@@ -434,8 +472,19 @@
 
             const isLiked = currentUser && postData.likes && postData.likes.includes(currentUser.uid);
             const likesCount = postData.likes ? postData.likes.length : 0;
-
             const timeAgo = postData.timestamp ? formatTimeAgo(postData.timestamp.toDate()) : 'just now';
+
+            const githubLinkHTML = postData.githubLink ? `
+                <a href="${postData.githubLink}" target="_blank" rel="noopener noreferrer" class="post-link-box">
+                    <i class='bx bxl-github'></i>
+                    <span>View Project on GitHub</span>
+                </a>` : '';
+
+            const portfolioLinkHTML = postData.portfolioLink ? `
+                <a href="${postData.portfolioLink}" target="_blank" rel="noopener noreferrer" class="post-link-box portfolio-link">
+                    <i class='bx bx-link-external'></i>
+                    <span>View Portfolio</span>
+                </a>` : '';
 
             postCard.innerHTML = `
                 <div class="post-header">
@@ -443,13 +492,17 @@
                     <div class="post-author-info">
                         <div class="author-name">${postData.userName}</div>
                         <div class="post-timestamp">
-                            ${postData.registerNumber ? `<strong style="font-weight: 500; color: #4a5568;">${postData.registerNumber}</strong> &bull; ` : ''}
+                            ${postData.registerNumber ? `<strong>${postData.registerNumber}</strong> &bull; ` : ''}
                             ${timeAgo}
                         </div>
                     </div>
                 </div>
                 <div class="post-content">
                     <p class="post-description">${escapeHTML(postData.description)}</p>
+                    <div class="post-links-container">
+                        ${githubLinkHTML}
+                        ${portfolioLinkHTML}
+                    </div>
                     ${postData.imageUrl ? `<img src="${postData.imageUrl}" alt="Post Image" class="post-image">` : ''}
                 </div>
                 <div class="post-actions">
@@ -468,13 +521,10 @@
                         <button class="reaction-btn" data-comment="Congratulations! 🎉">Congrats! 🎉</button>
                         <button class="reaction-btn" data-comment="Very inspiring!">Inspiring!</button>
                     </div>
-                    <div class="comments-list">
-                        </div>
-                </div>
-            `;
+                    <div class="comments-list"></div>
+                </div>`;
             postsContainer.appendChild(postCard);
 
-            // Render comments if they exist
             if (postData.comments && postData.comments.length > 0) {
                 const commentsList = postCard.querySelector('.comments-list');
                 postData.comments.forEach(comment => {
@@ -485,18 +535,16 @@
                         <div class="comment-body">
                             <div class="comment-author">${comment.userName}</div>
                             <p class="comment-text">${escapeHTML(comment.comment)}</p>
-                        </div>
-                    `;
+                        </div>`;
                     commentsList.appendChild(commentEl);
                 });
             }
         }
         
-        // --- 6. EVENT LISTENERS FOR LIKES & COMMENTS ---
+        // --- 6. EVENT LISTENERS ---
         postsContainer.addEventListener('click', e => {
             const postCard = e.target.closest('.post-card');
-            if (!postCard || !currentUser) return; // Ignore clicks if not on a card or if user isn't loaded
-
+            if (!postCard || !currentUser) return;
             const postId = postCard.dataset.id;
             
             if (e.target.closest('.like-btn')) handleLike(postId);
@@ -505,8 +553,7 @@
                 commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
             }
             if (e.target.classList.contains('reaction-btn')) {
-                const commentText = e.target.dataset.comment;
-                handleComment(postId, commentText);
+                handleComment(postId, e.target.dataset.comment);
             }
         });
 
@@ -514,18 +561,12 @@
             const postRef = db.collection('student_posts').doc(postId);
             await db.runTransaction(async (transaction) => {
                 const postDoc = await transaction.get(postRef);
-                if (!postDoc.exists) throw "Document does not exist!";
-                
+                if (!postDoc.exists) return;
                 const likes = postDoc.data().likes || [];
-                if (likes.includes(currentUser.uid)) {
-                    transaction.update(postRef, {
-                        likes: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                    });
-                } else {
-                    transaction.update(postRef, {
-                        likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    });
-                }
+                const newLikes = likes.includes(currentUser.uid)
+                    ? firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                    : firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
+                transaction.update(postRef, { likes: newLikes });
             });
         }
 
@@ -536,11 +577,9 @@
                 userName: currentUser.displayName,
                 userAvatar: currentUser.photoURL,
                 comment: commentText,
-                timestamp: new Date() // Use client-side date for comments
+                timestamp: new Date()
             };
-            await postRef.update({
-                comments: firebase.firestore.FieldValue.arrayUnion(newComment)
-            });
+            await postRef.update({ comments: firebase.firestore.FieldValue.arrayUnion(newComment) });
         }
 
         // --- 7. MODAL LOGIC & POST SUBMISSION ---
@@ -564,36 +603,39 @@
                 reader.readAsDataURL(file);
             }
         });
-
         postDescriptionInput.addEventListener('input', validateForm);
 
         function validateForm() {
-            const hasDescription = postDescriptionInput.value.trim() !== '';
-            const hasImage = imageUploadInput.files.length > 0;
-            submitPostBtn.disabled = !hasDescription || !hasImage;
+            submitPostBtn.disabled = !(postDescriptionInput.value.trim() && imageUploadInput.files.length);
         }
 
         submitPostBtn.addEventListener('click', async () => {
             const description = postDescriptionInput.value.trim();
             const imageFile = imageUploadInput.files[0];
-            
-            if (!description || !imageFile || !currentUser) return;
+            const githubLink = githubLinkInput.value.trim();
+            const portfolioLink = portfolioLinkInput.value.trim();
 
+            if (!description || !imageFile || !currentUser) return;
             setLoading(true);
 
             try {
                 const imageUrl = await uploadToCloudinary(imageFile);
-                await db.collection('student_posts').add({
+                const postData = {
                     userId: currentUser.uid,
                     userName: currentUser.displayName,
                     userAvatar: currentUser.photoURL,
-                    registerNumber: currentUser.registerNumber, // Save the register number with the post
+                    registerNumber: currentUser.registerNumber,
                     description: description,
                     imageUrl: imageUrl,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     likes: [],
                     comments: []
-                });
+                };
+
+                if (githubLink) postData.githubLink = githubLink;
+                if (portfolioLink) postData.portfolioLink = portfolioLink;
+
+                await db.collection('student_posts').add(postData);
                 resetAndHideModal();
             } catch (error) {
                 console.error("Error creating post:", error);
@@ -607,16 +649,10 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-            
             const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: formData
+                method: 'POST', body: formData
             });
-
-            if (!response.ok) {
-                throw new Error('Cloudinary upload failed');
-            }
-            
+            if (!response.ok) throw new Error('Cloudinary upload failed');
             const data = await response.json();
             return data.secure_url;
         }
@@ -624,42 +660,34 @@
         function resetAndHideModal() {
             modal.classList.remove('show');
             postDescriptionInput.value = '';
+            githubLinkInput.value = '';
+            portfolioLinkInput.value = '';
             imageUploadInput.value = '';
             imagePreview.src = '';
             imagePreview.style.display = 'none';
-            imagePreviewText.style.display = 'block'; // Corrected from flex to block
+            imagePreviewText.style.display = 'block';
             submitPostBtn.disabled = true;
         }
         
         function setLoading(isLoading) {
             const postBtnText = document.getElementById('post-btn-text');
             const postLoader = document.getElementById('post-loader');
-            if (isLoading) {
-                submitPostBtn.disabled = true;
-                postBtnText.style.display = 'none';
-                postLoader.style.display = 'inline-block';
-            } else {
-                validateForm(); // Re-validate to set button state correctly
-                postBtnText.style.display = 'inline-block';
-                postLoader.style.display = 'none';
-            }
+            submitPostBtn.disabled = isLoading;
+            postBtnText.style.display = isLoading ? 'none' : 'inline-block';
+            postLoader.style.display = isLoading ? 'inline-block' : 'none';
+            if(!isLoading) validateForm();
         }
 
         // --- 8. UTILITY FUNCTIONS ---
         function formatTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
             if (seconds < 5) return "just now";
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + " years ago";
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + " months ago";
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + " days ago";
-            interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + " hours ago";
-            interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + " minutes ago";
-            return Math.floor(seconds) + " seconds ago";
+            const intervals = { year: 31536000, month: 2592000, day: 86400, hour: 3600, minute: 60 };
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = seconds / secondsInUnit;
+                if (interval > 1) return `${Math.floor(interval)} ${unit}${Math.floor(interval) > 1 ? 's' : ''} ago`;
+            }
+            return `${Math.floor(seconds)} seconds ago`;
         }
 
         function escapeHTML(str) {
@@ -674,30 +702,15 @@
         });
         const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
         const sidebar = document.getElementById('sidebar');
-        mobileSidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
+        mobileSidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+        
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+                e.preventDefault();
+            }
         });
     });
-        // Right-click செய்வதை முடக்குகிறது
-        document.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
-        });
-
-        // Keyboard shortcuts-களை முடக்குகிறது
-        document.addEventListener('keydown', function(e) {
-            // F12 பட்டனை முடக்குகிறது
-            if (e.key === 'F12') {
-                e.preventDefault();
-            }
-            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C ஆகியவற்றை முடக்குகிறது
-            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
-                e.preventDefault();
-            }
-            // Ctrl+U-ஐ முடக்குகிறது
-            if (e.ctrlKey && e.key.toUpperCase() === 'U') {
-                e.preventDefault();
-            }
-        });
     </script>
 </body>
 </html>

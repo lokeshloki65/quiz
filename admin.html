@@ -65,7 +65,7 @@
         .stat-info h3 { font-size: 2.25rem; font-weight: 700; }
         .stat-info p { opacity: 0.9; }
         .results-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
-        .results-header h2 { font-size: 1.5rem; }
+        .results-header h2, .results-header h3 { font-size: 1.5rem; }
         .status-badge { padding: 0.25em 0.75em; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
         .status-live { background-color: #dcfce7; color: #166534; }
         .status-upcoming { background-color: #dbeafe; color: #1e40af; }
@@ -147,7 +147,7 @@
                     <div class="form-group"><label for="test-duration">Duration (in minutes)</label><input type="number" id="test-duration" required></div>
                     <div class="form-group" id="question-file-group">
                         <label for="question-file">Upload Questions (.txt file)</label><input type="file" id="question-file" accept=".txt">
-                        <small>Format: Numbered question, lettered options (a), b), etc.), and "Correct Answer:". Separate questions with "---". <br> 
+                        <small>Format: Numbered question, lettered options (a), b), etc.), and "Correct Answer:". Separate questions with "---". <br> <br>
                         <a href="#" id="download-sample-btn">Download sample format</a>
                         </small>
                     </div>
@@ -197,14 +197,18 @@
             </div>
              <div id="posts-view">
                 <div class="card">
-                    <h3>All Student Posts</h3>
+                    <div class="results-header">
+                         <h3>All Student Posts</h3>
+                         <button class="btn btn-success" id="export-posts-btn"><i class='bx bxs-file-export'></i> Export to Excel</button>
+                    </div>
                     <table id="posts-table">
                         <thead>
                             <tr>
                                 <th>Author</th>
                                 <th>Register No.</th>
                                 <th style="width: 30%;">Description</th>
-                                <th>Image</th>
+                                <th>GitHub Link</th>
+                                <th>Portfolio Link</th>
                                 <th>Posted On</th>
                                 <th>Actions</th>
                             </tr>
@@ -224,12 +228,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
       apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-  projectId: "student-central-hub-5w4l8",
-  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-  messagingSenderId: "379433916597",
-  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-};
+      authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+      projectId: "student-central-hub-5w4l8",
+      storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+      messagingSenderId: "379433916597",
+      appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
     
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
     catch(e) { console.error("Firebase init error", e); }
@@ -595,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('export-attended-btn').addEventListener('click', () => exportToExcel('attended-table', 'Attended_Students_Report'));
         document.getElementById('export-not-attended-btn').addEventListener('click', () => exportToExcel('not-attended-table', 'Not_Attended_Students_Report'));
+        document.getElementById('export-posts-btn').addEventListener('click', () => exportToExcel('posts-table', 'Student_Posts_Report'));
 
         const createTestForm = document.getElementById('create-test-form');
         createTestForm.addEventListener('submit', async (e) => {
@@ -687,29 +692,29 @@ document.addEventListener('DOMContentLoaded', () => {
             return questions;
         }
 
-        // --- Posts Management Functions START ---
+        // --- Posts Management Functions START (MODIFIED) ---
         function loadPosts() {
             const tableBody = document.querySelector('#posts-table tbody');
             db.collection('student_posts').orderBy('timestamp', 'desc')
               .onSnapshot(snapshot => {
                 if (snapshot.empty) {
-                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No student posts found.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No student posts found.</td></tr>';
                     return;
                 }
                 let html = '';
                 snapshot.forEach(doc => {
                     const post = doc.data();
                     const postDate = post.timestamp ? post.timestamp.toDate().toLocaleString() : 'N/A';
+                    const githubLink = escapeHTML(post.githubLink);
+                    const portfolioLink = escapeHTML(post.portfolioLink);
+
                     html += `
                         <tr>
                             <td>${escapeHTML(post.userName)}</td>
                             <td>${escapeHTML(post.registerNumber) || 'N/A'}</td>
                             <td style="white-space: pre-wrap; max-width: 300px; word-break: break-word;">${escapeHTML(post.description)}</td>
-                            <td>
-                                <a href="${post.imageUrl}" target="_blank" rel="noopener noreferrer">
-                                    <img src="${post.imageUrl}" width="80" style="border-radius: 8px;" alt="Post Image">
-                                </a>
-                            </td>
+                            <td><a href="${githubLink || '#'}" target="_blank" rel="noopener noreferrer">${githubLink ? 'View Link' : 'N/A'}</a></td>
+                            <td><a href="${portfolioLink || '#'}" target="_blank" rel="noopener noreferrer">${portfolioLink ? 'View Link' : 'N/A'}</a></td>
                             <td>${postDate}</td>
                             <td>
                                 <button class="action-btn btn-delete" title="Delete Post" onclick="deletePost('${doc.id}')">
@@ -721,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableBody.innerHTML = html;
             }, error => {
                 console.error("Error fetching posts:", error);
-                tableBody.innerHTML = '<tr><td colspan="6" style="color:red; text-align:center;">Error loading posts.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" style="color:red; text-align:center;">Error loading posts.</td></tr>';
             });
         }
 
@@ -738,12 +743,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         function escapeHTML(str) {
-            if (typeof str !== 'string') return '';
+            if (typeof str !== 'string') return str; // Return non-strings as is
             return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
         }
         // --- Posts Management Functions END ---
 
-        // --- Student Import Logic (SARI SEIYAPPATTADHU) ---
+        // --- Student Import Logic ---
         const importBtn = document.getElementById('import-students-btn');
         const importFile = document.getElementById('student-import-file');
         const importStatus = document.getElementById('import-status');
@@ -816,8 +821,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     await tempApp.delete();
 
-                    importStatus.innerHTML = `Import complete! <br> 
-                        <strong style="color:var(--success-color)">${successCount} students imported successfully.</strong><br>
+                    importStatus.innerHTML = `Import complete! <br> <br>
+                        <strong style="color:var(--success-color)">${successCount} students imported successfully.</strong><br><br>
                         <strong style="color:var(--danger-color)">${errorCount} students failed.</strong>`;
                     
                     if (errorMessages.length > 0) {

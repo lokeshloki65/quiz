@@ -8,15 +8,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --primary-color: #6a5af9; --success-color: #28a745; --danger-color: #dc3545;
             --background-color: #f0f2f5; --card-bg: #ffffff; --text-color: #4a5568;
             --heading-color: #1a202c; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,.1);
             --border-radius: 1rem;
+            --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background-color: var(--background-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem; }
+        body { 
+            background-color: var(--background-color); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 2rem; 
+        }
+        body.no-scroll {
+            overflow: hidden;
+        }
         .result-container { width: 100%; max-width: 800px; animation: fadeIn 0.5s ease-out; }
         .result-header {
             background: linear-gradient(45deg, var(--primary-color), #8a7dfc);
@@ -45,17 +57,76 @@
         .summary-item .value { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
         .summary-item .label { font-size: 0.9rem; color: var(--text-color); }
         .action-btn {
-            display: block; width: fit-content; margin: 2rem auto 0;
+            display: inline-block; text-align: center;
+            width: fit-content; margin: 2rem auto 0;
             background: var(--primary-color); color: #fff; text-decoration: none;
             padding: 0.75rem 2rem; border-radius: 2rem; font-weight: 500;
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .action-btn:hover { transform: translateY(-2px); }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-container { text-align: center; }
         #loading-text { font-size: 1.5rem; color: var(--heading-color); }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .top-performers-section { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
+        .section-title { text-align: center; color: var(--heading-color); margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; }
+        #top-graders-list { display: flex; flex-direction: column; gap: 1rem; }
+        .grader-card {
+            display: flex; align-items: center; background-color: #f8f9fa;
+            padding: 1rem; border-radius: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .grader-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .grader-rank-icon {
+            font-size: 2.5rem; margin-right: 1rem;
+            min-width: 50px; text-align: center; line-height: 1;
+        }
+        
+        .grader-img {
+            width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
+            margin-right: 1rem; border: 2px solid var(--border-color);
+            background-color: #e2e8f0;
+        }
+        .grader-info { flex-grow: 1; min-width: 0; }
+        .grader-info .name { 
+            font-weight: 600; color: var(--heading-color); display: block;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .grader-percentage { font-size: 1.25rem; font-weight: 700; color: var(--success-color); margin-left: 1rem; }
+
+        #congrats-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #congrats-overlay.show { opacity: 1; visibility: visible; }
+        .congrats-message {
+            color: white; text-align: center;
+            transform: scale(0.7);
+            transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        #congrats-overlay.show .congrats-message { transform: scale(1); }
+        .congrats-message h1 {
+            font-size: 4rem; font-weight: 700;
+            text-shadow: 0 0 10px var(--gold), 0 0 20px var(--gold);
+        }
+        .congrats-message p { font-size: 1.5rem; opacity: 0.9; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
+    <div id="congrats-overlay">
+        <div class="congrats-message">
+            <h1>Congratulations!</h1>
+            <p>You're a Top Performer!</p>
+        </div>
+    </div>
+
     <div id="result-container" class="result-container" style="display: none;">
         <div class="result-header">
             <div class="score-circle"><span id="score-percent">0%</span></div>
@@ -65,11 +136,19 @@
         <div class="result-body">
             <div class="summary-grid">
                 <div class="summary-item"><div id="total-questions" class="value">0</div><span class="label">Total Questions</span></div>
-                <div class="summary-item"><div id="marks-taken" class="value">0</div><span class="label">Marks Taken</span></div>
+                <div class="summary-item"><div id="marks-taken" class="value">0</div><span class="label">Marks Scored</span></div>
                 <div class="summary-item"><div id="total-marks" class="value">0</div><span class="label">Total Marks</span></div>
             </div>
-            <a href="#" id="view-solutions-btn" class="action-btn" style="display: none;">View Test Solutions</a>
-            <a href="assessments.html" id="back-to-assessments" class="action-btn">Back to Assessments</a>
+            <div class="btn-container">
+                <a href="#" id="view-solutions-btn" class="action-btn" style="display: none;">View Solutions</a>
+                <a href="assessments.html" id="back-to-assessments" class="action-btn">Back to Assessments</a>
+            </div>
+            
+            <div class="top-performers-section">
+                <h3 class="section-title">🏆 Top Performers</h3>
+                <div id="top-graders-list"></div>
+                <p id="top-graders-loading" style="text-align: center; color: var(--text-color); margin-top: 1rem;">Loading top performers...</p>
+            </div>
         </div>
     </div>
     <p id="loading-text">Loading Your Result...</p>
@@ -80,13 +159,13 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
-                apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-  projectId: "student-central-hub-5w4l8",
-  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-  messagingSenderId: "379433916597",
-  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-};
+        apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+        authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+        projectId: "student-central-hub-5w4l8",
+        storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+        messagingSenderId: "379433916597",
+        appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
 
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
     catch(e) { console.error("Firebase init error", e); }
@@ -94,20 +173,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    const resultContainer = document.getElementById('result-container');
-    const loadingText = document.getElementById('loading-text');
-
     auth.onAuthStateChanged(async user => {
         if (user) {
             const urlParams = new URLSearchParams(window.location.search);
             const subId = urlParams.get('subId');
             if (!subId) {
-                loadingText.textContent = 'Error: Submission ID not found.';
+                document.getElementById('loading-text').textContent = 'Error: Submission ID not found.';
                 return;
             }
             await loadResult(user, subId);
         } else {
-            // CORRECTED: This now redirects to the login page to prevent a loop.
             window.location.href = 'index.html';
         }
     });
@@ -122,7 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const userDoc = await db.collection('users').doc(user.uid).get();
             const studentName = userDoc.exists ? userDoc.data().name : 'Student';
-            const percentage = ((subData.score / subData.totalMarks) * 100).toFixed(1);
+            const totalMarks = subData.totalMarks || 1;
+            const percentage = ((subData.score / totalMarks) * 100).toFixed(1);
 
             document.getElementById('score-percent').textContent = `${percentage}%`;
             document.getElementById('student-name').textContent = `Hey, ${studentName.split(' ')[0]}!`;
@@ -130,50 +206,155 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('marks-taken').textContent = subData.score;
             document.getElementById('total-marks').textContent = subData.totalMarks;
             
-            // NEW: Logic to show "View Solutions" button only after the test has ended
             const testDoc = await db.collection('tests').doc(subData.testId).get();
             if (testDoc.exists) {
                 const testData = testDoc.data();
-                const now = new Date();
-                const endTime = testData.endTime.toDate();
-                
-                if (now > endTime) {
-                    const viewSolutionsBtn = document.getElementById('view-solutions-btn');
-                    viewSolutionsBtn.href = `solutions.html?subId=${subId}`;
-                    viewSolutionsBtn.style.display = 'block';
+                if (new Date() > testData.endTime.toDate()) {
+                    const btn = document.getElementById('view-solutions-btn');
+                    btn.href = `solutions.html?subId=${subId}`;
+                    btn.style.display = 'inline-block';
                 }
             }
             
-            loadingText.style.display = 'none';
-            resultContainer.style.display = 'block';
+            await loadTopGraders(subData.testId, user);
+
+            document.getElementById('loading-text').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
 
         } catch (error) {
             console.error(error);
-            loadingText.textContent = `Error: ${error.message}`;
+            document.getElementById('loading-text').textContent = `Error: ${error.message}`;
         }
     }
+
+    async function loadTopGraders(testId, currentUser) {
+        const listContainer = document.getElementById('top-graders-list');
+        const loadingEl = document.getElementById('top-graders-loading');
+        
+        try {
+            const submissionsSnapshot = await db.collection('submissions')
+                .where('testId', '==', testId)
+                .orderBy('score', 'desc')
+                .limit(3)
+                .get();
+
+            if (submissionsSnapshot.empty) {
+                loadingEl.textContent = 'Be the first to set a high score!';
+                return;
+            }
+            
+            function getInitials(name) {
+                const parts = name.trim().split(' ');
+                let initials = parts[0].substring(0, 1);
+                if (parts.length > 1) {
+                    initials += parts[parts.length - 1].substring(0, 1);
+                }
+                return initials.toUpperCase();
+            }
+
+            const topGradersPromises = submissionsSnapshot.docs.map(async (doc) => {
+                const submission = doc.data();
+                const userDoc = await db.collection('users').doc(submission.userId).get();
+                if (!userDoc.exists) return null;
+
+                const user = userDoc.data();
+                const totalMarks = submission.totalMarks || 1;
+                const percentage = ((submission.score / totalMarks) * 100).toFixed(1);
+
+                const userName = user.name || 'Anonymous';
+                const userInitials = getInitials(userName);
+
+                // --- THE FINAL, PERFECT FIX IS HERE ---
+                // Changed 'user.profileImageUrl' to 'user.profilePicUrl' to match your database exactly.
+                const profileImage = user.profilePicUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${userInitials}&backgroundColor=6a5af9,8a7dfc,b3e5fc,ffc107&textColor=ffffff&fontSize=40`;
+
+                return {
+                    userId: submission.userId,
+                    name: userName,
+                    profileImageUrl: profileImage,
+                    percentage: percentage,
+                };
+            });
+
+            const topGraders = (await Promise.all(topGradersPromises)).filter(Boolean);
+
+            if (topGraders.length === 0) {
+                 loadingEl.textContent = 'Top performers will appear here.';
+                 return;
+            }
+
+            const rankIcons = ['🏆', '🥈', '🥉'];
+            let rankHtml = '';
+            
+            topGraders.forEach((grader, index) => {
+                const rankIcon = rankIcons[index] || `<span>#${index + 1}</span>`;
+                rankHtml += `
+                    <div class="grader-card">
+                        <div class="grader-rank-icon">${rankIcon}</div>
+                        <img src="${grader.profileImageUrl}" alt="${grader.name}" class="grader-img">
+                        <div class="grader-info">
+                            <span class="name">${grader.name}</span>
+                        </div>
+                        <span class="grader-percentage">${grader.percentage}%</span>
+                    </div>
+                `;
+            });
+            
+            listContainer.innerHTML = rankHtml;
+            loadingEl.style.display = 'none';
+
+            setTimeout(() => {
+                const isTopPerformer = topGraders.some(grader => grader.userId === currentUser.uid);
+                if (isTopPerformer) {
+                    triggerCongratulations();
+                }
+            }, 500);
+
+        } catch (error) {
+            console.error("Error loading top graders:", error);
+            loadingEl.textContent = 'Could not load top performers.';
+        }
+    }
+
+    function triggerCongratulations() {
+        const overlay = document.getElementById('congrats-overlay');
+        overlay.classList.add('show');
+        document.body.classList.add('no-scroll'); 
+
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+            const particleCount = 50 * (timeLeft / duration);
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+
+        setTimeout(() => {
+            overlay.classList.remove('show');
+            document.body.classList.remove('no-scroll'); 
+        }, duration + 500);
+    }
+    
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+            e.preventDefault();
+        }
+    });
 });
-    // Right-click செய்வதை முடக்குகிறது
-        document.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
-        });
-
-        // Keyboard shortcuts-களை முடக்குகிறது
-        document.addEventListener('keydown', function(e) {
-            // F12 பட்டனை முடக்குகிறது
-            if (e.key === 'F12') {
-                e.preventDefault();
-            }
-            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C ஆகியவற்றை முடக்குகிறது
-            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
-                e.preventDefault();
-            }
-            // Ctrl+U-ஐ முடக்குகிறது
-            if (e.ctrlKey && e.key.toUpperCase() === 'U') {
-                e.preventDefault();
-            }
-        });
 </script>
-</body>
-
+</body> 
 </html>

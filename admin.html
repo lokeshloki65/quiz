@@ -215,14 +215,13 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
-        apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-        authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-        projectId: "student-central-hub-5w4l8",
-        // storageBucket மாற்றப்பட்டுள்ளது
-        storageBucket: "student-central-hub-5w4l8.appspot.com",
-        messagingSenderId: "379433916597",
-        appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-    };
+      apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+  projectId: "student-central-hub-5w4l8",
+  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+  messagingSenderId: "379433916597",
+  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+};
     
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
     catch(e) { console.error("Firebase init error", e); }
@@ -268,10 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     link.classList.toggle('active', linkView === viewId);
                 }
             });
-            // viewTitles மாற்றப்பட்டுள்ளது
             const viewTitles = {'dashboard-view': 'Dashboard', 'tests-view': 'Test Management', 'create-test-view': 'Create New Test', 'students-view': 'Student Management', 'posts-view': 'Posts Management', 'results-view': 'Test Results'};
             pageTitle.textContent = viewTitles[viewId] || 'Dashboard';
-            // headerActionBtn தர்க்கம் மாற்றப்பட்டுள்ளது
             headerActionBtn.style.display = (viewId === 'students-view' || viewId === 'results-view' || viewId === 'create-test-view' || viewId === 'posts-view') ? 'none' : 'block';
             headerActionBtn.innerHTML = "<i class='bx bx-plus'></i> Create New Test";
 
@@ -511,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (sub.submissionReason && sub.submissionReason.startsWith("Malpractice")) {
                                     malpracticeIndicator = `<i class='bx bxs-error-circle' style='color: var(--danger-color); vertical-align: middle; margin-left: 8px;' title='${sub.submissionReason}'></i>`;
                                 }
-                               
+                                
                                 attendedHtml += `<tr>
                                     <td>${attendedCount++}</td>
                                     <td>${student.name} ${malpracticeIndicator}</td>
@@ -671,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return questions;
         }
 
-        // --- புதியதாக சேர்க்கப்பட்ட செயல்பாடுகள் START ---
+        // --- Posts Management Functions START ---
         function loadPosts() {
             const tableBody = document.querySelector('#posts-table tbody');
             db.collection('student_posts').orderBy('timestamp', 'desc')
@@ -725,9 +722,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof str !== 'string') return '';
             return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
         }
-        // --- புதியதாக சேர்க்கப்பட்ட செயல்பாடுகள் END ---
+        // --- Posts Management Functions END ---
 
-        // --- Student Import Logic ---
+        // --- Student Import Logic (SARI SEIYAPPATTADHU) ---
         const importBtn = document.getElementById('import-students-btn');
         const importFile = document.getElementById('student-import-file');
         const importStatus = document.getElementById('import-status');
@@ -786,7 +783,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             successCount++;
                         } catch (error) {
                             errorCount++;
-                            errorMessages.push(`Failed to import ${Email}: ${error.message}`);
+                            let reason = error.message;
+                            if (error.code === 'auth/email-already-in-use') {
+                                reason = 'Email already exists in the system.';
+                            } else if (error.code === 'auth/weak-password') {
+                                reason = 'Password is too weak (must be at least 6 characters).';
+                            } else if (error.code === 'auth/invalid-email') {
+                                reason = 'Invalid email format.';
+                            }
+                            errorMessages.push(`Failed to import ${Email}: ${reason}`);
                         }
                     }
                     
@@ -797,8 +802,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong style="color:var(--danger-color)">${errorCount} students failed.</strong>`;
                     
                     if (errorMessages.length > 0) {
-                        console.error("Import errors:", errorMessages);
-                        importStatus.innerHTML += '<br>Check browser console for error details.';
+                        console.error("--- IMPORT ERRORS ---");
+                        errorMessages.forEach(msg => console.log(msg));
+                        console.error("---------------------");
+                        importStatus.innerHTML += '<br>Check browser console (F12) for error details.';
                     }
 
                 } catch (e) {
@@ -816,12 +823,12 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileSidebarToggle.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); });
         overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
 
-        // Initial Load - மாற்றப்பட்டுள்ளது
+        // Initial Load
         loadDashboardStats();
         loadSubmissionsChart();
         loadTests();
         loadStudents();
-        loadPosts(); // Posts load function is called here
+        loadPosts();
     }
 });
 </script>

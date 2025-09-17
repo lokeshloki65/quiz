@@ -80,8 +80,17 @@
             color: var(--text-color);
             max-width: 600px;
         }
+        
+        /* MODIFIED SECTION */
+        .team-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* Changed to always have 4 columns */
+            gap: 2rem; /* Slightly reduced gap to fit better */
+            width: 100%;
+            max-width: 1200px;
+        }
 
-        .team-container, .mentor-container, .tech-stack-container {
+        .mentor-container, .tech-stack-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2.5rem;
@@ -93,7 +102,7 @@
             background: var(--card-bg);
             border-radius: var(--border-radius);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2.5rem 2rem;
+            padding: 2rem 1.5rem; /* Adjusted padding */
             text-align: center;
             opacity: 0;
             animation: fadeInUp 0.8s ease-out forwards;
@@ -109,22 +118,22 @@
         .mentor-card:nth-child(2) { animation-delay: 0.3s; }
 
         .member-img {
-            width: 140px; height: 140px;
+            width: 120px; height: 120px; /* Reduced image size */
             border-radius: 50%;
             object-fit: cover;
-            border: 5px solid var(--primary-color);
+            border: 4px solid var(--primary-color);
             margin-bottom: 1.5rem;
             box-shadow: 0 0 20px rgba(106, 90, 249, 0.4);
         }
         
         .member-name {
-            font-size: 1.5rem; font-weight: 600;
+            font-size: 1.25rem; font-weight: 600; /* Adjusted font size */
             color: var(--heading-color);
             margin-bottom: 0.25rem;
         }
         
         .member-designation {
-            font-size: 1rem;
+            font-size: 0.9rem; /* Adjusted font size */
             color: var(--primary-color);
             font-weight: 500;
             margin-bottom: 1.5rem;
@@ -144,7 +153,7 @@
         }
         .social-links a {
             color: var(--text-color);
-            font-size: 1.5rem;
+            font-size: 1.4rem; /* Adjusted icon size */
             transition: color 0.3s ease, transform 0.3s ease;
         }
         .social-links a:hover {
@@ -154,11 +163,12 @@
 
         .portfolio-btn {
             display: inline-block;
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.2rem; /* Adjusted button padding */
             background: linear-gradient(45deg, var(--primary-color), #8e44ad);
             color: #fff;
             text-decoration: none; border-radius: 50px;
             font-weight: 500;
+            font-size: 0.9rem; /* Adjusted button font size */
             transition: all 0.3s ease;
             border: none;
         }
@@ -271,14 +281,14 @@
     <section class="mentor-container">
          <div class="mentor-card">
             <img src="https://i.pinimg.com/1200x/98/0e/df/980edf76400abde2868acf9d1c3b764b.jpg" alt="Dr. Thangavelu" class="member-img">
-            <h3 class="member-name">Dr. Thangavel</h3>
+            <h3 class="member-name">Dr. P.Thangavel</h3>
             <p class="member-designation">Principal</p>
             <a href="https://thangavelp-svhec-principal.vercel.app/" target="_blank" rel="noopener noreferrer" class="portfolio-btn">View Profile</a>
         </div>
         <div class="mentor-card">
             <img src="https://i.pinimg.com/1200x/98/33/d8/9833d8b37c607a4f5cb3949c0c3c35f1.jpg" alt="Dr. Senthil Prakash" class="member-img">
-            <h3 class="member-name">Dr. Senthil Prakash</h3>
-            <p class="member-designation">Head of Department</p>
+            <h3 class="member-name">Dr. R.Senthil Kumar</h3>
+            <p class="member-designation">Head of Department AI & DS</p>
             <a href="https://senthilkumar-svhec-hod.vercel.app/" target="_blank" rel="noopener noreferrer" class="portfolio-btn">View Profile</a>
         </div>
     </section>

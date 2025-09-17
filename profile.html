@@ -84,10 +84,13 @@
         </div>
         <ul class="sidebar-nav">
             <li><a href="dashboard.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
+            <li class="nav-item">
+                <a href="students_post.htm" class="nav-link"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
+            </li>
             <li><a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i>Assessments</a></li>
             <li><a href="profile.html" class="nav-link active"><i class='bx bxs-user-circle nav-icon'></i>Profile</a></li>
         </ul>
-         <div class="sidebar-footer">
+        <div class="sidebar-footer">
             <button class="logout-btn nav-link" id="logout-btn"><i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span></button>
         </div>
     </aside>
@@ -110,7 +113,7 @@
                 </div>
                 <h2 id="profile-name" class="profile-name">Loading...</h2>
                 <p id="profile-email" class="profile-email"></p>
-                <div id="upload-progress"><progress value="0" max="100"></progress></div>
+                <div id="upload-progress">Uploading...</div>
             </div>
             
             <div class="details-card">
@@ -130,26 +133,25 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
-              apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-  authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-  projectId: "student-central-hub-5w4l8",
-  storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-  messagingSenderId: "379433916597",
-  appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
-};
+        apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+        authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+        projectId: "student-central-hub-5w4l8",
+        storageBucket: "student-central-hub-5w4l8.appspot.com",
+        messagingSenderId: "379433916597",
+        appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+    };
 
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } 
     catch (e) { console.error("Firebase init error", e); }
     
     const db = firebase.firestore();
     const auth = firebase.auth();
-    const storage = firebase.storage();
+    // const storage = firebase.storage(); // We don't need this for Cloudinary
 
+    // --- DOM Elements ---
     const profileNameEl = document.getElementById('profile-name');
     const profileEmailEl = document.getElementById('profile-email');
     const headerProfileImg = document.getElementById('header-profile-img');
@@ -162,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileUploadInput = document.getElementById('profile-pic-upload');
     const saveBtn = document.getElementById('save-btn');
     const uploadProgress = document.getElementById('upload-progress');
-    const progressElement = uploadProgress.querySelector('progress');
     const sidebar = document.getElementById('sidebar');
     const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
     
@@ -174,14 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserId = user.uid;
             loadUserProfile(user.uid);
         } else {
-            // CORRECTED: This now redirects to the login page to prevent a loop.
             window.location.href = 'index.html';
         }
     });
     
     function loadUserProfile(userId) {
         const userRef = db.collection('users').doc(userId);
-        userRef.onSnapshot((doc) => {
+        userRef.onSnapshot((doc) => { // onSnapshot provides real-time updates
             if (doc.exists) {
                 const userData = doc.data();
                 profileNameEl.textContent = userData.name;
@@ -190,43 +190,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 editEmailInput.value = userData.email;
                 editRegNumberInput.value = userData.register_number || 'Not Set';
                 editClassInput.value = userData.class_year || 'Not Set';
+                
                 const avatarUrl = userData.profilePicUrl || defaultAvatar;
                 headerProfileImg.src = avatarUrl;
                 profileAvatar.src = avatarUrl;
             } else { console.log("No user document found!"); }
         });
     }
-    
+
+    // =================================================================
+    // /// CLOUDINARY UPLOAD LOGIC ///
+    // =================================================================
     fileUploadInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file || !currentUserId) return;
-        const filePath = `profile_pictures/${currentUserId}/${file.name}`;
-        const fileRef = storage.ref(filePath);
-        const uploadTask = fileRef.put(file);
+
+        // ** REPLACE WITH YOUR DETAILS **
+        const CLOUDINARY_CLOUD_NAME = "dk7tldvvb"; // உங்கள் Cloudinary Cloud Name ஐ இங்கே உள்ளிடவும்
+        const CLOUDINARY_UPLOAD_PRESET = "ai_academicy_unsigned"; // நீங்கள் உருவாக்கிய Upload Preset பெயரை இங்கே உள்ளிடவும்
+
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
         uploadProgress.style.display = 'block';
         saveBtn.disabled = true;
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressElement.value = progress;
-            }, 
-            (error) => {
-                console.error("Upload failed:", error);
-                alert("Image upload failed. Please try again.");
-                uploadProgress.style.display = 'none';
-                saveBtn.disabled = false;
-            }, 
-            () => {
-                uploadTask.snapshot.ref.getDownloadURL().then(async (downloadURL) => {
-                    await db.collection('users').doc(currentUserId).update({ profilePicUrl: downloadURL });
-                    alert('Profile picture updated successfully!');
-                    uploadProgress.style.display = 'none';
-                    saveBtn.disabled = false;
-                });
+
+        fetch(uploadUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.secure_url) {
+                const imageUrl = data.secure_url;
+                // Save the Cloudinary URL to Firestore
+                await db.collection('users').doc(currentUserId).update({ profilePicUrl: imageUrl });
+                alert('Profile picture updated successfully!');
+            } else {
+                throw new Error('Image URL not found in Cloudinary response.');
             }
-        );
+        })
+        .catch(error => {
+            console.error("Cloudinary upload failed:", error);
+            alert("Image upload failed. Please try again.");
+        })
+        .finally(() => {
+            uploadProgress.style.display = 'none';
+            saveBtn.disabled = false;
+            fileUploadInput.value = ''; // Reset the file input
+        });
     });
 
+    // =================================================================
+    // /// PROFILE NAME UPDATE LOGIC (UNCHANGED) ///
+    // =================================================================
     profileEditForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         saveBtn.disabled = true;

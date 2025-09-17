@@ -147,20 +147,24 @@
                 <h1 class="logo-text">AI Academicy</h1>
                 <button class="sidebar-toggle" id="sidebar-toggle"><i class='bx bx-chevrons-left'></i></button>
             </div>
-            <ul class="sidebar-nav">
-                <li class="nav-item">
-                    <a href="dashboard.html" class="nav-link active"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
-                    <span class="tooltip">Dashboard</span>
-                </li>
-                <li class="nav-item">
-                    <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
-                    <span class="tooltip">Assessments</span>
-                </li>
-                <li class="nav-item">
-                    <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
-                    <span class="tooltip">Profile</span>
-                </li>
-            </ul>
+           <ul class="sidebar-nav">
+              <li class="nav-item">
+                  <a href="dashboard.html" class="nav-link active"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
+                  <span class="tooltip">Dashboard</span>
+              </li>
+              <li class="nav-item">
+                  <a href="students_post.htm" class="nav-link"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
+                  <span class="tooltip">Students Post</span>
+              </li>
+              <li class="nav-item">
+                  <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
+                  <span class="tooltip">Assessments</span>
+              </li>
+              <li class="nav-item">
+                  <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
+                  <span class="tooltip">Profile</span>
+              </li>
+          </ul>
             <div class="sidebar-footer">
                 <button class="logout-btn nav-link" id="logout-btn">
                     <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
@@ -375,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarToggle.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
         if (window.innerWidth > 992) {
-             // Adjust footer position based on sidebar state on desktop
              if (sidebar.classList.contains('collapsed')) {
                 pageFooter.style.left = '88px';
              } else {

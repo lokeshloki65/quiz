@@ -591,11 +591,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
- document.addEventListener('keydown', function(e) {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
-            e.preventDefault();
-        }
-    });
+// Right-click மற்றும் shortcuts-களை முடக்கும் கோட்
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+        e.preventDefault();
+    }
 });
 </script>
 </body>

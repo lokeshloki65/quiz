@@ -78,12 +78,10 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .grader-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        
         .grader-rank-icon {
             font-size: 2.5rem; margin-right: 1rem;
             min-width: 50px; text-align: center; line-height: 1;
         }
-        
         .grader-img {
             width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
             margin-right: 1rem; border: 2px solid var(--border-color);
@@ -110,13 +108,23 @@
             color: white; text-align: center;
             transform: scale(0.7);
             transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            padding: 0 1rem; /* Added padding to prevent touching screen edges */
         }
         #congrats-overlay.show .congrats-message { transform: scale(1); }
+        
+        /* === PERFECT FIX IS HERE === */
         .congrats-message h1 {
-            font-size: 4rem; font-weight: 700;
+            /* Using clamp for responsive font size that adapts to screen width */
+            font-size: clamp(2.5rem, 12vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1; /* Improved line spacing */
             text-shadow: 0 0 10px var(--gold), 0 0 20px var(--gold);
         }
-        .congrats-message p { font-size: 1.5rem; opacity: 0.9; margin-top: 0.5rem; }
+        .congrats-message p {
+            /* Also making the paragraph responsive */
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            opacity: 0.9; margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -263,9 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const userName = user.name || 'Anonymous';
                 const userInitials = getInitials(userName);
-
-                // --- THE FINAL, PERFECT FIX IS HERE ---
-                // Changed 'user.profileImageUrl' to 'user.profilePicUrl' to match your database exactly.
+                
                 const profileImage = user.profilePicUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${userInitials}&backgroundColor=6a5af9,8a7dfc,b3e5fc,ffc107&textColor=ffffff&fontSize=40`;
 
                 return {

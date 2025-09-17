@@ -26,10 +26,13 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: var(--background-color); color: var(--text-color); display: flex; overflow-x: hidden; }
+        /* NEW: Style to prevent body scroll when sidebar is open */
+        body.sidebar-open-body { overflow: hidden; }
 
         .app-container { display: flex; width: 100vw; height: 100vh; }
 
-        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; padding: 1.5rem 1rem; display: flex; flex-direction: column; transition: width var(--transition-speed); z-index: 1000; }
+        /* UPDATED: Added transition for 'left' property for smooth mobile sliding */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; padding: 1.5rem 1rem; display: flex; flex-direction: column; transition: width var(--transition-speed), left var(--transition-speed); z-index: 1000; }
         .sidebar.collapsed { width: 88px; }
         .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; padding: 0 0.5rem; }
         .sidebar-header .logo-icon { font-size: 2rem; color: var(--primary-color); }
@@ -58,6 +61,24 @@
         .sidebar-toggle:hover { color: #fff; }
         .mobile-sidebar-toggle { display: none; }
 
+        /* NEW: Styles for the overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998; /* Below sidebar, above content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; transition: var(--transition-speed); animation: fadeIn 0.5s ease-out forwards; }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
@@ -84,43 +105,26 @@
         .course-progress-text { font-size: 0.8rem; color: var(--text-color); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ======== UPDATED FOOTER STYLES ======== */
-        @keyframes point-left { /* <<< ANIMATION NAME & DIRECTION CHANGED */
+        @keyframes point-left {
             0%, 100% { transform: translateX(0); }
             50% { transform: translateX(-5px); }
         }
 
         .page-footer {
-            position: fixed;
-            bottom: 0;
-            left: 260px; 
-            right: 0;
-            background-color: var(--background-color);
-            text-align: center;
-            padding: 1rem 0;
-            z-index: 999;
-            border-top: 1px solid var(--border-color);
-            transition: left var(--transition-speed);
-            font-size: 0.9rem;
+            position: fixed; bottom: 0; left: 260px; right: 0;
+            background-color: var(--background-color); text-align: center;
+            padding: 1rem 0; z-index: 999; border-top: 1px solid var(--border-color);
+            transition: left var(--transition-speed); font-size: 0.9rem;
         }
-        .page-footer span {
-            color: var(--text-color);
-        }
+        .page-footer span { color: var(--text-color); }
         .page-footer .footer-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.05em;
-            transition: color 0.3s;
+            color: var(--primary-color); text-decoration: none; font-weight: 700;
+            font-size: 1.05em; transition: color 0.3s;
         }
-        .page-footer .footer-link:hover {
-            text-decoration: underline;
-        }
+        .page-footer .footer-link:hover { text-decoration: underline; }
         .page-footer .pointing-arrow {
-            display: inline-block;
-            margin-left: 0.4rem;
-            color: var(--primary-color);
-            animation: point-left 1.5s ease-in-out infinite; /* <<< ANIMATION NAME CHANGED */
+            display: inline-block; margin-left: 0.4rem; color: var(--primary-color);
+            animation: point-left 1.5s ease-in-out infinite;
         }
 
         @media (max-width: 992px) {
@@ -147,25 +151,23 @@
                 <h1 class="logo-text">AI Academicy</h1>
             </div>
            <ul class="sidebar-nav">
-              <li class="nav-item">
-                  <a href="dashboard.html" class="nav-link active"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
-                  <span class="tooltip">Dashboard</span>
-              </li>
-              <li class="nav-item">
-                  <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
-                  <span class="tooltip">Profile</span>
-              </li>
                <li class="nav-item">
-                  <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
-                  <span class="tooltip">Assessments</span>
-              </li>
+                   <a href="dashboard.html" class="nav-link active"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
+                   <span class="tooltip">Dashboard</span>
+               </li>
+               <li class="nav-item">
+                   <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
+                   <span class="tooltip">Profile</span>
+               </li>
               <li class="nav-item">
-                  <a href="students_post.html" class="nav-link"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
-                  <span class="tooltip">Students Post</span>
-              </li>
-             
-              
-          </ul>
+                   <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
+                   <span class="tooltip">Assessments</span>
+               </li>
+               <li class="nav-item">
+                   <a href="students_post.html" class="nav-link"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
+                   <span class="tooltip">Students Post</span>
+               </li>
+           </ul>
             <div class="sidebar-footer">
                 <button class="logout-btn nav-link" id="logout-btn">
                     <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
@@ -173,6 +175,8 @@
                 </button>
             </div>
         </aside>
+
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
         <main class="main-content" id="main-content">
             <header class="main-header">
@@ -221,16 +225,18 @@
     <footer class="page-footer" id="page-footer">
         <span>© 2025 All Rights Reserved by </span>
         <a href="team.html" target="_blank" rel="noopener noreferrer" class="footer-link">code crafters</a>
-        <i class='bx bx-left-arrow-alt pointing-arrow'></i> </footer>
+        <i class='bx bx-left-arrow-alt pointing-arrow'></i>
+    </footer>
+
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     const firebaseConfig = {
-              apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
-              authDomain: "student-central-hub-5w4l8.firebaseapp.com",
-              projectId: "student-central-hub-5w4l8",
-              storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
-              messagingSenderId: "379433916597",
-              appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+        apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+        authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+        projectId: "student-central-hub-5w4l8",
+        storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+        messagingSenderId: "379433916597",
+        appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
     };
 
     try {
@@ -370,61 +376,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- Sidebar, Footer, and Logout Logic ---
+    // --- UPDATED SIDEBAR, FOOTER, AND LOGOUT LOGIC ---
     const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
     const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
     const pageFooter = document.getElementById('page-footer');
-    const mainContent = document.getElementById('main-content');
+    const sidebarOverlay = document.getElementById('sidebar-overlay'); // Get overlay
 
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        if (window.innerWidth > 992) {
-             if (sidebar.classList.contains('collapsed')) {
-                pageFooter.style.left = '88px';
-             } else {
-                pageFooter.style.left = '260px';
-             }
-        }
-    });
+    // Function to close the mobile sidebar
+    function closeMobileSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open-body');
+    }
 
+    // Event listener for the mobile toggle button (hamburger)
     mobileSidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
+        sidebar.classList.add('open');
+        sidebarOverlay.classList.add('active');
+        document.body.classList.add('sidebar-open-body'); // Lock body scroll
     });
     
+    // Event listener for the overlay to close the sidebar
+    sidebarOverlay.addEventListener('click', closeMobileSidebar);
+
     document.getElementById('logout-btn').addEventListener('click', () => {
         auth.signOut().then(() => {
             window.location.href = 'index.html';
         });
     });
 
-    // Initial footer position check on load for desktop
-    if (window.innerWidth > 992) {
-        pageFooter.style.left = sidebar.classList.contains('collapsed') ? '88px' : '260px';
-    }
+    // --- Developer Tools Disable Logic ---
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || 
+           (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+           (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+            e.preventDefault();
+        }
+    });
 });
-        // Right-click செய்வதை முடக்குகிறது
-        document.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
-        });
-
-        // Keyboard shortcuts-களை முடக்குகிறது
-        document.addEventListener('keydown', function(e) {
-            // F12 பட்டனை முடக்குகிறது
-            if (e.key === 'F12') {
-                e.preventDefault();
-            }
-            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C ஆகியவற்றை முடக்குகிறது
-            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
-                e.preventDefault();
-            }
-            // Ctrl+U-ஐ முடக்குகிறது
-            if (e.ctrlKey && e.key.toUpperCase() === 'U') {
-                e.preventDefault();
-            }
-        });
 </script>
 </body>
 </html>
-
-

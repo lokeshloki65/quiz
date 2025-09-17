@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Post | AI Academicy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #6a5af9; --secondary-color: #a19dff; --background-color: #f0f2f5;
+            --sidebar-bg: #1e293b; --card-bg: #ffffff; --text-color: #4a5568;
+            --heading-color: #1a202c; --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+            --border-radius: 1rem; --transition-speed: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--background-color); color: var(--text-color); display: flex; overflow-x: hidden; }
+
+        .app-container { display: flex; width: 100vw; height: 100vh; }
+
+        /* ======== SIDEBAR STYLES (Same as Dashboard) ======== */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; padding: 1.5rem 1rem; display: flex; flex-direction: column; transition: width var(--transition-speed); z-index: 1000; }
+        .sidebar.collapsed { width: 88px; }
+        .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; padding: 0 0.5rem; }
+        .sidebar-header .logo-icon { font-size: 2rem; color: var(--primary-color); }
+        .sidebar-header .logo-text { font-size: 1.5rem; font-weight: 600; white-space: nowrap; opacity: 1; transition: opacity 0.2s, width 0.2s; }
+        .sidebar.collapsed .logo-text { opacity: 0; width: 0; display: none; }
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+        .nav-item { margin-bottom: 0.5rem; position: relative; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #94a3b8; text-decoration: none; transition: var(--transition-speed); white-space: nowrap; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(106, 90, 249, 0.2); color: #ffffff; }
+        .nav-link .nav-icon { font-size: 1.4rem; margin-right: 1rem; min-width: 24px; text-align: center; transition: margin var(--transition-speed); }
+        .sidebar.collapsed .nav-link { justify-content: center; }
+        .sidebar.collapsed .nav-link .nav-icon { margin-right: 0; }
+        .sidebar.collapsed .nav-text { display: none; }
+        .tooltip { position: absolute; left: 100%; top: 50%; transform: translateY(-50%) translateX(-10px); background-color: #fff; color: var(--heading-color); padding: 0.5rem 1rem; border-radius: 0.5rem; white-space: nowrap; box-shadow: var(--shadow); z-index: 10; font-weight: 500; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
+        .sidebar.collapsed .nav-item:hover .tooltip { visibility: visible; opacity: 1; transform: translateX(0); }
+        .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
+        .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
+        
+        /* ======== MAIN CONTENT & AI BACKGROUND ======== */
+        .main-content { 
+            flex: 1; 
+            padding: 2rem; 
+            overflow-y: auto; 
+            position: relative;
+            background: linear-gradient(315deg, #f0f2f5 0%, #e6e9ff 74%);
+            animation: gradient-animation 15s ease infinite;
+            background-size: 400% 400%;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
+        .profile-dropdown img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid var(--primary-color); }
+        .mobile-sidebar-toggle { display: none; }
+
+        /* ======== POSTS FEED STYLES ======== */
+        .posts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .post-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+        }
+        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .post-author-info .author-name { font-weight: 600; color: var(--heading-color); }
+        .post-author-info .post-timestamp { font-size: 0.8rem; color: var(--text-color); }
+
+        .post-content .post-description {
+            padding: 0 1.5rem 1rem;
+            white-space: pre-wrap; /* To respect newlines in description */
+            color: var(--text-color);
+        }
+        .post-content .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain; /* Changed to contain to see the full image */
+            background-color: #f8f9fa; /* Added background for letterboxed images */
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .action-btn {
+            display: flex; align-items: center; gap: 0.5rem;
+            background: none; border: none; cursor: pointer;
+            padding: 0.5rem; border-radius: 0.5rem;
+            font-size: 0.9rem; font-weight: 500; color: var(--text-color);
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .action-btn:hover { background-color: #f0f2f5; }
+        .action-btn.liked { color: var(--primary-color); font-weight: 700; }
+        .action-btn i { font-size: 1.25rem; }
+
+        .comments-section {
+            padding: 0 1.5rem 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .comment { display: flex; gap: 0.75rem; margin-top: 1rem; }
+        .comment-avatar { width: 32px; height: 32px; border-radius: 50%; }
+        .comment-body { background: #f0f2f5; padding: 0.5rem 1rem; border-radius: 1rem; flex: 1; }
+        .comment-author { font-weight: 600; font-size: 0.9rem; color: var(--heading-color); }
+        .comment-text { font-size: 0.9rem; }
+        .comment-reactions { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .reaction-btn { background: #e2e8f0; border: none; padding: 0.5rem 1rem; border-radius: 2rem; cursor: pointer; transition: background-color 0.2s; }
+        .reaction-btn:hover { background-color: var(--secondary-color); color: white; }
+        
+        /* ======== ADD POST BUTTON & MODAL ======== */
+        .add-post-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(106, 90, 249, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+            z-index: 1001;
+        }
+        .add-post-btn:hover { transform: scale(1.1); }
+        .add-post-btn:disabled {
+            background-color: #a19dff;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-title { font-size: 1.5rem; color: var(--heading-color); }
+        .close-modal-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: var(--text-color); }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group textarea {
+            width: 100%;
+            height: 120px;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            resize: vertical;
+            font-family: 'Poppins', sans-serif;
+        }
+        .image-preview-container {
+            width: 100%;
+            min-height: 150px;
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            color: var(--text-color);
+        }
+        #image-preview { max-width: 100%; max-height: 250px; }
+        #image-upload { display: none; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; }
+        .btn {
+            padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+            border: none; font-weight: 600; cursor: pointer;
+            transition: var(--transition-speed);
+        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #5243e0; }
+        .btn-primary:disabled { background-color: #a19dff; cursor: not-allowed; }
+        .btn-secondary { background-color: var(--border-color); color: var(--text-color); }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+        
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ======== RESPONSIVE STYLES ======== */
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; left: -260px; height: 100%; }
+            .sidebar.open { left: 0; }
+            .main-content { margin-left: 0; }
+            .sidebar-toggle { display: none; }
+            .mobile-sidebar-toggle { display: block; color: var(--text-color); }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .posts-container { grid-template-columns: 1fr; } /* Single column on smaller screens */
+            .add-post-btn { bottom: 1rem; right: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bxs-brain logo-icon'></i>
+                <h1 class="logo-text">AI Academicy</h1>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i><span class="nav-text">Dashboard</span></a>
+                    <span class="tooltip">Dashboard</span>
+                </li>
+                <li class="nav-item">
+                    <a href="students_post.html" class="nav-link active"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
+                    <span class="tooltip">Students Post</span>
+                </li>
+                <li class="nav-item">
+                    <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
+                    <span class="tooltip">Assessments</span>
+                </li>
+                <li class="nav-item">
+                    <a href="profile.html" class="nav-link"><i class='bx bxs-user-circle nav-icon'></i><span class="nav-text">Profile</span></a>
+                    <span class="tooltip">Profile</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="logout-btn nav-link" id="logout-btn">
+                    <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
+                    <span class="tooltip">Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content" id="main-content">
+            <header class="main-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="sidebar-toggle mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
+                    <h2 class="page-title">Community Feed</h2>
+                </div>
+                <a href="profile.html" class="profile-dropdown">
+                    <img id="profile-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="User Profile">
+                </a>
+            </header>
+            
+            <section id="posts-container" class="posts-container">
+                </section>
+        </main>
+    </div>
+
+    <button class="add-post-btn" id="add-post-btn" title="Loading user profile..." disabled>
+        <i class='bx bx-plus'></i>
+    </button>
+
+    <div class="modal-overlay" id="add-post-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create a new post</h3>
+                <button class="close-modal-btn" id="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <textarea id="post-description" placeholder="Share something about your achievement... (e.g., project name, course details)"></textarea>
+                </div>
+                <div class="form-group">
+                    <input type="file" id="image-upload" accept="image/*">
+                    <label for="image-upload" class="image-preview-container" id="image-preview-container">
+                        <img id="image-preview" src="" alt="Image Preview" style="display: none;">
+                        <span class="image-preview-text" id="image-preview-text">
+                            <i class='bx bx-cloud-upload' style="font-size: 2rem;"></i><br>
+                            Click to upload a certificate or project image
+                        </span>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancel-post-btn">Cancel</button>
+                    <button class="btn btn-primary" id="submit-post-btn" disabled>
+                        <span id="post-btn-text">Post</span>
+                        <div class="loader" id="post-loader" style="display: none;"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. CLOUDINARY CONFIGURATION (REPLACE WITH YOUR DETAILS) ---
+        const CLOUDINARY_CLOUD_NAME = "dk7tldvvb"; // <-- Paste your Cloud Name here
+        const CLOUDINARY_UPLOAD_PRESET = "students_post."; // <-- Paste your Upload Preset Name here
+
+        // --- 2. FIREBASE INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+            authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+            projectId: "student-central-hub-5w4l8",
+            storageBucket: "student-central-hub-5w4l8.appspot.com", // Corrected storage bucket domain
+            messagingSenderId: "379433916597",
+            appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+        };
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        } catch (e) { console.error("Firebase init error", e); }
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // --- 3. GLOBAL VARIABLES & UI ELEMENTS ---
+        let currentUser = null; // This will hold all user info (auth + firestore)
+        const postsContainer = document.getElementById('posts-container');
+        const modal = document.getElementById('add-post-modal');
+        const addPostBtn = document.getElementById('add-post-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const cancelPostBtn = document.getElementById('cancel-post-btn');
+        const submitPostBtn = document.getElementById('submit-post-btn');
+        const imageUploadInput = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const imagePreviewText = document.getElementById('image-preview-text');
+        const postDescriptionInput = document.getElementById('post-description');
+
+        // --- 4. AUTHENTICATION & INITIALIZATION ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadUserProfile(user);
+                fetchPosts();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        function loadUserProfile(user) {
+            const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E`;
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if(doc.exists) {
+                    const userData = doc.data();
+                    // Combine auth data and firestore data into one object
+                    currentUser = {
+                        uid: user.uid,
+                        displayName: userData.name || 'Anonymous User',
+                        photoURL: userData.profilePicUrl || defaultAvatar,
+                        registerNumber: userData.registerNumber || '' // Fetch register number
+                    };
+                    document.getElementById('profile-img').src = currentUser.photoURL;
+                } else {
+                     console.warn("User doc not in Firestore. Using auth details.");
+                    currentUser = {
+                        uid: user.uid,
+                        displayName: user.displayName || 'Anonymous User',
+                        photoURL: user.photoURL || defaultAvatar,
+                        registerNumber: ''
+                    };
+                    document.getElementById('profile-img').src = currentUser.photoURL;
+                }
+                // IMPORTANT: Enable posting only after user profile is fully loaded
+                addPostBtn.disabled = false;
+                addPostBtn.title = 'Create a new post';
+            }).catch(error => {
+                console.error("Error fetching user profile:", error);
+                // Keep button disabled if there's an error
+                addPostBtn.title = 'Error loading profile. Cannot post.';
+            });
+        }
+        
+        // --- 5. FETCH AND RENDER POSTS IN REAL-TIME ---
+        function fetchPosts() {
+            db.collection('student_posts').orderBy('timestamp', 'desc')
+                .onSnapshot(snapshot => {
+                    postsContainer.innerHTML = ''; // Clear existing posts
+                    if(snapshot.empty) {
+                        postsContainer.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">No posts yet. Be the first to share something!</p>';
+                    }
+                    snapshot.forEach(doc => {
+                        renderPost(doc.id, doc.data());
+                    });
+                });
+        }
+
+        function renderPost(postId, postData) {
+            const postCard = document.createElement('div');
+            postCard.className = 'post-card';
+            postCard.dataset.id = postId;
+
+            const isLiked = currentUser && postData.likes && postData.likes.includes(currentUser.uid);
+            const likesCount = postData.likes ? postData.likes.length : 0;
+
+            const timeAgo = postData.timestamp ? formatTimeAgo(postData.timestamp.toDate()) : 'just now';
+
+            postCard.innerHTML = `
+                <div class="post-header">
+                    <img src="${postData.userAvatar}" alt="Author Avatar" class="post-avatar">
+                    <div class="post-author-info">
+                        <div class="author-name">${postData.userName}</div>
+                        <div class="post-timestamp">
+                            ${postData.registerNumber ? `<strong style="font-weight: 500; color: #4a5568;">${postData.registerNumber}</strong> &bull; ` : ''}
+                            ${timeAgo}
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <p class="post-description">${escapeHTML(postData.description)}</p>
+                    ${postData.imageUrl ? `<img src="${postData.imageUrl}" alt="Post Image" class="post-image">` : ''}
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn like-btn ${isLiked ? 'liked' : ''}">
+                        <i class='bx ${isLiked ? 'bxs-like' : 'bx-like'}'></i> 
+                        <span>Like</span> 
+                        (<span class="like-count">${likesCount}</span>)
+                    </button>
+                    <button class="action-btn comment-btn">
+                        <i class='bx bx-comment'></i> <span>Comment</span>
+                    </button>
+                </div>
+                <div class="comments-section" style="display: none;">
+                    <div class="comment-reactions">
+                        <button class="reaction-btn" data-comment="Nice work! 👍">Nice work! 👍</button>
+                        <button class="reaction-btn" data-comment="Congratulations! 🎉">Congrats! 🎉</button>
+                        <button class="reaction-btn" data-comment="Very inspiring!">Inspiring!</button>
+                    </div>
+                    <div class="comments-list">
+                        </div>
+                </div>
+            `;
+            postsContainer.appendChild(postCard);
+
+            // Render comments if they exist
+            if (postData.comments && postData.comments.length > 0) {
+                const commentsList = postCard.querySelector('.comments-list');
+                postData.comments.forEach(comment => {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'comment';
+                    commentEl.innerHTML = `
+                        <img src="${comment.userAvatar}" alt="Commenter Avatar" class="comment-avatar">
+                        <div class="comment-body">
+                            <div class="comment-author">${comment.userName}</div>
+                            <p class="comment-text">${escapeHTML(comment.comment)}</p>
+                        </div>
+                    `;
+                    commentsList.appendChild(commentEl);
+                });
+            }
+        }
+        
+        // --- 6. EVENT LISTENERS FOR LIKES & COMMENTS ---
+        postsContainer.addEventListener('click', e => {
+            const postCard = e.target.closest('.post-card');
+            if (!postCard || !currentUser) return; // Ignore clicks if not on a card or if user isn't loaded
+
+            const postId = postCard.dataset.id;
+            
+            if (e.target.closest('.like-btn')) handleLike(postId);
+            if (e.target.closest('.comment-btn')) {
+                const commentsSection = postCard.querySelector('.comments-section');
+                commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+            }
+            if (e.target.classList.contains('reaction-btn')) {
+                const commentText = e.target.dataset.comment;
+                handleComment(postId, commentText);
+            }
+        });
+
+        async function handleLike(postId) {
+            const postRef = db.collection('student_posts').doc(postId);
+            await db.runTransaction(async (transaction) => {
+                const postDoc = await transaction.get(postRef);
+                if (!postDoc.exists) throw "Document does not exist!";
+                
+                const likes = postDoc.data().likes || [];
+                if (likes.includes(currentUser.uid)) {
+                    transaction.update(postRef, {
+                        likes: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                    });
+                } else {
+                    transaction.update(postRef, {
+                        likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    });
+                }
+            });
+        }
+
+        async function handleComment(postId, commentText) {
+            const postRef = db.collection('student_posts').doc(postId);
+            const newComment = {
+                userId: currentUser.uid,
+                userName: currentUser.displayName,
+                userAvatar: currentUser.photoURL,
+                comment: commentText,
+                timestamp: new Date() // Use client-side date for comments
+            };
+            await postRef.update({
+                comments: firebase.firestore.FieldValue.arrayUnion(newComment)
+            });
+        }
+
+        // --- 7. MODAL LOGIC & POST SUBMISSION ---
+        addPostBtn.addEventListener('click', () => modal.classList.add('show'));
+        closeModalBtn.addEventListener('click', resetAndHideModal);
+        cancelPostBtn.addEventListener('click', resetAndHideModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) resetAndHideModal();
+        });
+
+        imageUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                    imagePreviewText.style.display = 'none';
+                    validateForm();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        postDescriptionInput.addEventListener('input', validateForm);
+
+        function validateForm() {
+            const hasDescription = postDescriptionInput.value.trim() !== '';
+            const hasImage = imageUploadInput.files.length > 0;
+            submitPostBtn.disabled = !hasDescription || !hasImage;
+        }
+
+        submitPostBtn.addEventListener('click', async () => {
+            const description = postDescriptionInput.value.trim();
+            const imageFile = imageUploadInput.files[0];
+            
+            if (!description || !imageFile || !currentUser) return;
+
+            setLoading(true);
+
+            try {
+                const imageUrl = await uploadToCloudinary(imageFile);
+                await db.collection('student_posts').add({
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName,
+                    userAvatar: currentUser.photoURL,
+                    registerNumber: currentUser.registerNumber, // Save the register number with the post
+                    description: description,
+                    imageUrl: imageUrl,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    likes: [],
+                    comments: []
+                });
+                resetAndHideModal();
+            } catch (error) {
+                console.error("Error creating post:", error);
+                alert("Failed to create post. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        async function uploadToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Cloudinary upload failed');
+            }
+            
+            const data = await response.json();
+            return data.secure_url;
+        }
+
+        function resetAndHideModal() {
+            modal.classList.remove('show');
+            postDescriptionInput.value = '';
+            imageUploadInput.value = '';
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            imagePreviewText.style.display = 'block'; // Corrected from flex to block
+            submitPostBtn.disabled = true;
+        }
+        
+        function setLoading(isLoading) {
+            const postBtnText = document.getElementById('post-btn-text');
+            const postLoader = document.getElementById('post-loader');
+            if (isLoading) {
+                submitPostBtn.disabled = true;
+                postBtnText.style.display = 'none';
+                postLoader.style.display = 'inline-block';
+            } else {
+                validateForm(); // Re-validate to set button state correctly
+                postBtnText.style.display = 'inline-block';
+                postLoader.style.display = 'none';
+            }
+        }
+
+        // --- 8. UTILITY FUNCTIONS ---
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 5) return "just now";
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return Math.floor(seconds) + " seconds ago";
+        }
+
+        function escapeHTML(str) {
+            const p = document.createElement("p");
+            p.textContent = str;
+            return p.innerHTML;
+        }
+        
+        // --- Sidebar & Logout Logic ---
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut().then(() => window.location.href = 'index.html');
+        });
+        const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        mobileSidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    });
+    </script>
+</body>
+</html>

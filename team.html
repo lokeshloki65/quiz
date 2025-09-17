@@ -81,16 +81,24 @@
             max-width: 600px;
         }
         
-        /* MODIFIED SECTION */
+        /* MODIFIED SECTION FOR RESPONSIVENESS */
         .team-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* Changed to always have 4 columns */
-            gap: 2rem; /* Slightly reduced gap to fit better */
+            /* Default responsive layout for mobile */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 2rem;
             width: 100%;
             max-width: 1200px;
         }
 
-        .mentor-container, .tech-stack-container {
+        /* Media Query for Desktop View */
+        @media (min-width: 1200px) {
+            .team-container {
+                grid-template-columns: repeat(4, 1fr); /* 4 columns on larger screens */
+            }
+        }
+
+        .mentor-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2.5rem;
@@ -102,7 +110,7 @@
             background: var(--card-bg);
             border-radius: var(--border-radius);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem 1.5rem; /* Adjusted padding */
+            padding: 2rem 1.5rem; 
             text-align: center;
             opacity: 0;
             animation: fadeInUp 0.8s ease-out forwards;
@@ -118,7 +126,7 @@
         .mentor-card:nth-child(2) { animation-delay: 0.3s; }
 
         .member-img {
-            width: 120px; height: 120px; /* Reduced image size */
+            width: 120px; height: 120px; 
             border-radius: 50%;
             object-fit: cover;
             border: 4px solid var(--primary-color);
@@ -127,13 +135,13 @@
         }
         
         .member-name {
-            font-size: 1.25rem; font-weight: 600; /* Adjusted font size */
+            font-size: 1.25rem; font-weight: 600;
             color: var(--heading-color);
             margin-bottom: 0.25rem;
         }
         
         .member-designation {
-            font-size: 0.9rem; /* Adjusted font size */
+            font-size: 0.9rem;
             color: var(--primary-color);
             font-weight: 500;
             margin-bottom: 1.5rem;
@@ -153,7 +161,7 @@
         }
         .social-links a {
             color: var(--text-color);
-            font-size: 1.4rem; /* Adjusted icon size */
+            font-size: 1.4rem;
             transition: color 0.3s ease, transform 0.3s ease;
         }
         .social-links a:hover {
@@ -163,12 +171,12 @@
 
         .portfolio-btn {
             display: inline-block;
-            padding: 0.6rem 1.2rem; /* Adjusted button padding */
+            padding: 0.6rem 1.2rem;
             background: linear-gradient(45deg, var(--primary-color), #8e44ad);
             color: #fff;
             text-decoration: none; border-radius: 50px;
             font-weight: 500;
-            font-size: 0.9rem; /* Adjusted button font size */
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             border: none;
         }

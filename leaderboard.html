@@ -36,6 +36,9 @@
         .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #9ca3af; text-decoration: none; margin-bottom: 0.5rem; transition: var(--transition-speed); }
         .nav-link:hover, .nav-link.active { background-color: rgba(123, 104, 238, 0.2); color: #fff; }
         .nav-icon { font-size: 1.4rem; margin-right: 1rem; }
+         .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
+        .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
+        
         
         /* --- Main Content Styles --- */
         .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
@@ -54,6 +57,7 @@
         .rank-gold { color: var(--gold-color); }
         .rank-silver { color: var(--silver-color); }
         .rank-bronze { color: var(--bronze-color); }
+
         .user-cell { display: flex; align-items: center; gap: 1rem; }
         .user-cell img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         .user-cell .name { font-weight: 500; color: var(--heading-color); }
@@ -87,6 +91,11 @@
     <li><a href="admin.html" class="nav-link"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
     <li><a href="admin.html" class="nav-link" data-view="posts-view"><i class='bx bxs-news nav-icon'></i>Posts Management</a></li>
     <li><a href="leaderboard.html" class="nav-link active"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
+     <div class="sidebar-footer">
+            <button class="logout-btn nav-link" id="logout-btn">
+                <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
+            </button>
+        </div>
 </ul>
         </aside>
 
@@ -131,29 +140,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // --- NEW: Security Check for Admin Page ---
     auth.onAuthStateChanged(user => {
         if (user) {
-            // User is logged in, now check if they are an admin
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (doc.exists && doc.data().role === 'admin') {
-                    // User is an admin, let them stay.
                     console.log("Admin access granted for Leaderboard.");
                     initializeLeaderboardPage(user);
                 } else {
-                    // User is not an admin, redirect them.
                     alert("Access Denied. You must be an admin to view this page.");
-                    window.location.href = 'index.html'; // Or a student dashboard page
+                    window.location.href = 'index.html';
                 }
             });
         } else {
-            // User is not logged in, redirect them.
             alert("Access Denied. Please log in as an admin.");
             window.location.href = 'index.html';
         }
     });
 
     async function initializeLeaderboardPage(user) {
+        
+        // --- சரிசெய்யப்பட்ட Logout கோட் இங்கே சேர்க்கப்பட்டுள்ளது ---
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    console.log('User signed out successfully.');
+                    window.location.href = 'index.html'; // Logout செய்த பிறகு login பக்கத்திற்கு அனுப்பவும்
+                }).catch((error) => {
+                    console.error('Sign out error', error);
+                    alert('Logout செய்யும்போது பிழை ஏற்பட்டது.');
+                });
+            });
+        }
+        // --------------------------------------------------------
+
         try {
             const [submissionsSnapshot, usersSnapshot] = await Promise.all([
                 db.collection('submissions').get(),
@@ -165,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const scores = {};
             submissionsSnapshot.forEach(doc => {
                 const sub = doc.data();
-                if (!usersMap.has(sub.userId)) return; // Only count submissions from students
+                if (!usersMap.has(sub.userId)) return;
 
                 if (!scores[sub.userId]) {
                     scores[sub.userId] = { totalScore: 0, totalMaxMarks: 0, count: 0 };
@@ -200,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderLeaderboard(leaderboard) {
         const tableBody = document.getElementById('leaderboard-body');
-        tableBody.innerHTML = ''; // Clear loading state
+        tableBody.innerHTML = ''; 
 
         if (leaderboard.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 2rem;">No submissions yet to create a leaderboard.</td></tr>`;
@@ -232,26 +252,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-    // Right-click செய்வதை முடக்குகிறது
-        document.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
-        });
 
-        // Keyboard shortcuts-களை முடக்குகிறது
-        document.addEventListener('keydown', function(e) {
-            // F12 பட்டனை முடக்குகிறது
-            if (e.key === 'F12') {
-                e.preventDefault();
-            }
-            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C ஆகியவற்றை முடக்குகிறது
-            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
-                e.preventDefault();
-            }
-            // Ctrl+U-ஐ முடக்குகிறது
-            if (e.ctrlKey && e.key.toUpperCase() === 'U') {
-                e.preventDefault();
-            }
-        });
+// Right-click மற்றும் shortcuts-களை முடக்கும் கோட்
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+        e.preventDefault();
+    }
+});
 </script>
 </body>
 </html>

@@ -68,7 +68,27 @@
         .btn-results { background-color: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); }
         .btn-results:hover { background-color: rgba(106, 90, 249, 0.1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
+         @keyframes point-left {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-9px); }
+        }
+         .page-footer {
+            position: fixed; bottom: 0; left: 260px; right: 0;
+            background-color: var(--background-color); text-align: center;
+            padding: 1rem 0; z-index: 999; border-top: 1px solid var(--border-color);
+            transition: left var(--transition-speed); font-size: 0.9rem;
+        }
+        .page-footer span { color: var(--text-color); }
+        .page-footer .footer-link {
+            color: var(--primary-color); text-decoration: none; font-weight: 700;
+            font-size: 1.4em; transition: color 0.3s;
+        }
+        .page-footer .footer-link:hover { text-decoration: underline; }
+        .page-footer .pointing-arrow {
+            display: inline-block; margin-left: 0.10rem; color: var(--primary-color);
+            font-size: 1.4rem;
+            animation: point-left 1s ease-in-out infinite;
+        }
         /* --- NEW: Media Queries for Responsive Design --- */
         .mobile-sidebar-toggle { display: none; } /* Hide on desktop */
         @media (max-width: 992px) {
@@ -109,6 +129,11 @@
                 </button>
             </div>
         </aside>
+          <footer class="page-footer" id="page-footer">
+        <span>© 2025 All Rights Reserved by </span>
+        <a href="team.html" target="_blank" rel="noopener noreferrer" class="footer-link">code crafters</a>
+        <i class='bx bx-left-arrow-alt pointing-arrow'></i>
+    </footer>
 
         <main class="main-content">
             <header class="main-header">

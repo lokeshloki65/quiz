@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SV Academy - The Future of Campus Learning</title>
+    <title>SV Academicy - The Future of Campus Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -33,32 +33,18 @@
 
         /* --- Header --- */
         header {
-            position: sticky;
-            top: 0;
-            width: 100%;
+            position: sticky; top: 0; width: 100%;
             background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
+            backdrop-filter: blur(10px); z-index: 1000;
             border-bottom: 1px solid #eee;
         }
         .navbar { display: flex; justify-content: space-between; align-items: center; height: 75px; }
         
-        /* --- UPDATED LOGO STYLE FOR PERFECT FIT --- */
         .logo { 
-            font-size: 1.8rem; 
-            font-weight: 800; 
-            color: var(--heading-color); 
-            text-decoration: none; 
-            display: flex; /* Aligns logo and text */
-            align-items: center; /* Vertically centers them */
-            gap: 12px; /* Space between logo and text */
+            font-size: 1.8rem; font-weight: 800; color: var(--heading-color); 
+            text-decoration: none; display: flex; align-items: center; gap: 12px;
         }
-        .header-logo {
-            height: 45px; /* Controls the logo height */
-            width: auto;
-        }
-        /* --- END OF UPDATE --- */
-
+        .header-logo { height: 45px; width: auto; }
         .logo span { background: var(--gradient); -webkit-background-clip: text; color: transparent; }
         .nav-links { list-style: none; display: flex; gap: 40px; }
         .nav-links a { text-decoration: none; color: var(--heading-color); font-weight: 600; transition: color 0.3s; }
@@ -69,13 +55,10 @@
 
         /* --- Hero Section --- */
         #hero {
-            padding: 100px 0;
-            text-align: center;
+            padding: 100px 0; text-align: center;
             background: linear-gradient(180deg, #f3f6ff 0%, #ffffff 100%);
-            min-height: 90vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 90vh; display: flex;
+            align-items: center; justify-content: center;
         }
         .hero-content h1 { font-size: 3.8rem; font-weight: 800; line-height: 1.2; color: var(--heading-color); margin-bottom: 20px; }
         .hero-content h1 .highlight { background: var(--gradient); -webkit-background-clip: text; color: transparent; }
@@ -90,18 +73,12 @@
         /* --- Features Section --- */
         .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .feature-card {
-            background: var(--card-bg);
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            text-align: center;
-            transition: transform 0.3s;
+            background: var(--card-bg); padding: 40px 30px;
+            border-radius: 12px; box-shadow: var(--shadow);
+            text-align: center; transition: transform 0.3s;
             border-top: 4px solid transparent;
         }
-        .feature-card:hover {
-            transform: translateY(-10px);
-            border-top-color: var(--primary-color);
-        }
+        .feature-card:hover { transform: translateY(-10px); border-top-color: var(--primary-color); }
         .feature-card .icon { font-size: 3rem; background: var(--gradient); -webkit-background-clip: text; color: transparent; margin-bottom: 20px; }
         .feature-card h3 { font-size: 1.5rem; color: var(--heading-color); margin-bottom: 10px; }
 
@@ -112,43 +89,18 @@
 
         /* --- Gallery Section --- */
         #gallery { background-color: #f9faff; }
-
-        /* --- STYLES FOR THE LOGO --- */
-        .college-logo-container {
-            text-align: center;      /* Centers the logo */
-            margin: -20px 0 50px 0;  /* Adds space around the logo */
-        }
+        .college-logo-container { text-align: center; margin: -20px 0 50px 0; }
         .college-logo {
-            max-width: 130px;        /* Controls the size of the logo */
-            height: auto;
-            border-radius: 50%;      /* Makes the logo circular */
-            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1); /* Adds a soft shadow */
-            background-color: #fff;  /* White background for the logo */
-            padding: 10px;           /* Space between logo and its circular border */
-            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth animation */
+            max-width: 130px; height: auto; border-radius: 50%;
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1);
+            background-color: #fff; padding: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .college-logo:hover {
-            transform: scale(1.05) translateY(-5px); /* Lifts and enlarges the logo on hover */
-            box-shadow: 0px 12px 30px rgba(106, 17, 203, 0.2); /* Enhances shadow on hover */
-        }
-        /* --- END OF STYLES --- */
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 250px);
-            gap: 15px;
-        }
+        .college-logo:hover { transform: scale(1.05) translateY(-5px); box-shadow: 0px 12px 30px rgba(106, 17, 203, 0.2); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 250px); gap: 15px; }
         .gallery-item { overflow: hidden; border-radius: 12px; position: relative; }
-        .gallery-item img, .gallery-item iframe {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-        .gallery-item:hover img, .gallery-item:hover iframe {
-            transform: scale(1.1);
-        }
+        .gallery-item img, .gallery-item iframe { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .gallery-item:hover img, .gallery-item:hover iframe { transform: scale(1.1); }
         .item-1 { grid-column: 1 / 2; grid-row: 1 / 3; }
         .item-2 { grid-column: 2 / 4; grid-row: 1 / 2; }
         .item-3 { grid-column: 2 / 3; grid-row: 2 / 3; }
@@ -163,14 +115,86 @@
         .btn-light { background: #fff; color: var(--primary-color); }
         .btn-light:hover { background: #f0f0f0; }
 
-        /* --- Footer --- */
+        /* ========================================= */
+        /* --- FOOTER SECTION - CSS CHANGES --- */
+        /* ========================================= */
         footer { background: var(--heading-color); color: #fff; padding: 60px 0 30px; }
-        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 50px; margin-bottom: 50px; }
-        .footer-col h4 { font-size: 1.3rem; margin-bottom: 20px; }
-        .footer-col a, .footer-col ul li { color: #ccc; text-decoration: none; list-style: none; margin-bottom: 10px; transition: color 0.3s; }
-        .footer-col a:hover, .footer-col ul li a:hover { color: #fff; }
-        .footer-socials a { font-size: 1.5rem; margin-right: 15px; }
-        .footer-bottom { text-align: center; padding-top: 30px; border-top: 1px solid #333; color: #ccc; }
+        .footer-grid { 
+            display: grid; 
+            /* Center column ku adhigama space kudukurom */
+            grid-template-columns: 1fr 1.5fr 1fr; 
+            gap: 50px; 
+            margin-bottom: 50px; 
+        }
+        .footer-col {
+             /* Itha sertha, center column content center aagidum */
+            display: flex;
+            flex-direction: column;
+        }
+        .footer-col.center-align {
+            align-items: center; /* Center column content center aaga */
+            text-align: center;
+        }
+
+        .footer-col h4 { 
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            color: #fff;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+        }
+        .footer-col h4 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .footer-col p { color: #ccc; margin-bottom: 20px; }
+        .footer-col a, .footer-col ul li a { color: #ccc; text-decoration: none; transition: color 0.3s; }
+        .footer-col a:hover, .footer-col ul li a:hover { color: #fff; padding-left: 5px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 15px; }
+        
+        /* PUDHU LOGO STYLE */
+        .footer-logo {
+            max-width: 90px;
+            background: #fff;
+            border-radius: 50%;
+            padding: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        
+        .footer-socials a { 
+            font-size: 1.8rem;
+            margin: 0 10px; /* Saadharna margin */
+            color: #ccc;
+            transition: all 0.3s ease;
+        }
+        .footer-socials a:hover {
+            color: #fff;
+            transform: translateY(-3px);
+        }
+        .footer-bottom { text-align: center; padding-top: 30px; border-top: 1px solid #444; color: #ccc; }
+
+        .footer-link {
+            color: var(--secondary-color); text-decoration: none;
+            font-weight: bold; transition: all 0.3s ease;
+        }
+        .footer-link:hover { color: #fff; text-decoration: underline; }
+
+        .contact-list li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .contact-list i {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            color: var(--secondary-color);
+            margin-top: 5px;
+        }
+        /* ========================================= */
 
         /* --- Animation --- */
         .reveal { opacity: 0; transform: translateY(50px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
@@ -195,7 +219,7 @@
                 <a href="login.html" class="btn btn-primary">Student Login</a>
             </nav>
         </div>
-    </header> 
+    </header>
 
     <main>
         <section id="hero">
@@ -263,14 +287,11 @@
                     <h2>Life at Shree Venkateshwara</h2>
                     <p>A glimpse into our vibrant campus life and innovative environment in Erode.</p>
                 </div>
-
                 <div class="college-logo-container reveal">
                     <img src="SV LOGO.jpg" alt="SVHEC College Logo" class="college-logo">
                 </div>
-
                 <div class="gallery-grid">
                     <div class="gallery-item item-1 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Campus"></div>
-                    
                     <div class="gallery-item item-3 reveal">
                         <iframe 
                             src="https://www.youtube.com/embed/KbOIlyPVcFw?autoplay=1&mute=1&loop=1&playlist=KbOIlyPVcFw&controls=0&showinfo=0&autohide=1" 
@@ -279,7 +300,6 @@
                             allowfullscreen>
                         </iframe>
                     </div>
-                    
                     <div class="gallery-item item-2 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Labs"></div>
                     <div class="gallery-item item-4 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Students"></div>
                 </div>
@@ -300,42 +320,60 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h4>SV<span>Academicy</span></h4>
-                    <p>An initiative by the students of Shree Venkateshwara Hi-Tech Engineering College, Erode, to foster a culture of learning and competition.</p>
-                    <div class="footer-socials">
-                        <a href="https://www.facebook.com/svhec.svhec?mibextid=ZbWKwL"><i class='bx bxl-facebook-square'></i></a>
-                        <a href="https://www.instagram.com/life_at_svh_easy/"><i class='bx bxl-instagram'></i></a>
-                        <a href="https://www.linkedin.com/in/lokesh-m-265b832b3"><i class='bx bxl-linkedin-square'></i></a>
-                    </div>
-                </div>
-                <div class="footer-col">
                     <h4>Quick Links</h4>
                     <ul>
-                        <li><a href="team2.html">About Us</a></li>
+                        <li><a href="#hero">Home</a></li>
                         <li><a href="#features">Features</a></li>
+                        <li><a href="team2.html">About Us</a></li>
+                        <li><a href="https://www.svhec.com/" target="_blank">College Website</a></li>
                         <li><a href="#">Privacy Policy</a></li>
                     </ul>
                 </div>
-                 <div class="footer-col">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li>SV Nagar, Erode-Gobichettipalayam</li>
-                        <li>Main Road, Erode, Tamil Nadu.</li>
-                        <li>developersstudio.site@gmail.com</li>
+
+                <div class="footer-col center-align">
+                    <img src="SV LOGO.jpg" alt="SV Academicy Logo" class="footer-logo">
+                    <h4>SV<span>Academicy</span></h4>
+                    <p>An initiative by the students of Shree Venkateshwara Hi-Tech Engineering College to foster a culture of learning, competition, and innovation.</p>
+                    <div class="footer-socials">
+                        <a href="https://www.facebook.com/svhec.svhec?mibextid=ZbWKwL" target="_blank"><i class='bx bxl-facebook-square'></i></a>
+                        <a href="https://www.instagram.com/life_at_svh_easy/" target="_blank"><i class='bx bxl-instagram-alt'></i></a>
+                        <a href="https://www.linkedin.com/in/lokesh-m-265b832b3" target="_blank"><i class='bx bxl-linkedin-square'></i></a>
+                        <a href="https://www.youtube.com/@svhec" target="_blank"><i class='bx bxl-youtube'></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Contact Info</h4>
+                    <ul class="contact-list">
+                        <li>
+                            <i class='bx bxs-map'></i>
+                            <span>Erode - Gobi Main Road, Othakuthirai, Gobichettipalayam, Erode - 638455.</span>
+                        </li>
+                        <li>
+                            <i class='bx bxs-phone'></i>
+                            <span>+91 98651 47777 / 98650 66242</span>
+                        </li>
+                        <li>
+                            <i class='bx bxs-envelope'></i>
+                            <span>svhecgobi@gmail.com</span>
+                        </li>
+                         <li>
+                            <i class='bx bxs-id-card'></i>
+                            <span>developersstudio.site@gmail.com</span>
+                        </li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                &copy; 2025 SV Academicy | Designed by Code Crafters
+                &copy; 2025 SV Academicy | Designed by <a href="team2.html" id="code-crafters-link" class="footer-link" target="_blank">Code Crafters</a> <span id="view-count-wrapper"></span>
             </div>
         </div>
     </footer>
 
     <script>
+    // This script is for the scroll animation only
     document.addEventListener('DOMContentLoaded', () => {
-        // Scroll Reveal Animation
         const revealElements = document.querySelectorAll('.reveal');
-
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -343,11 +381,74 @@
                 }
             });
         }, { threshold: 0.1 });
-
         revealElements.forEach(el => {
             revealObserver.observe(el);
         });
     });
+    </script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
+            authDomain: "student-central-hub-5w4l8.firebaseapp.com",
+            projectId: "student-central-hub-5w4l8",
+            storageBucket: "student-central-hub-5w4l8.appspot.com",
+            messagingSenderId: "379433916597",
+            appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const counterRef = doc(db, "site_analytics", "index_page_counters");
+
+        async function trackPageLoad() {
+            await setDoc(counterRef, { pageLoads: increment(1) }, { merge: true });
+        }
+
+        async function trackLinkClick() {
+            await setDoc(counterRef, { linkClicks: increment(1) }, { merge: true });
+        }
+        
+        async function showLinkClickCount() {
+            try {
+                const docSnap = await getDoc(counterRef);
+                const countWrapper = document.getElementById("view-count-wrapper");
+                
+                let countSpan = document.getElementById("view-count");
+                if (!countSpan) {
+                    countSpan = document.createElement('span');
+                    countSpan.id = 'view-count';
+                    countWrapper.innerHTML = ' | Views: ';
+                    countWrapper.appendChild(countSpan);
+                }
+                
+                if (docSnap.exists() && docSnap.data().linkClicks) {
+                    countSpan.textContent = docSnap.data().linkClicks;
+                } else {
+                    countSpan.textContent = "0";
+                }
+                countWrapper.style.display = "inline";
+            } catch (error) {
+                console.error("Error getting link click count:", error);
+            }
+        }
+
+        const codeCraftersLink = document.getElementById("code-crafters-link");
+        
+        codeCraftersLink.addEventListener("click", async (event) => {
+            event.preventDefault(); 
+            await trackLinkClick(); 
+            window.open(codeCraftersLink.href, '_blank'); 
+            showLinkClickCount();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            trackPageLoad();
+            showLinkClickCount();
+        });
     </script>
 </body>
 </html>

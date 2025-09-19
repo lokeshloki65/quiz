@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SV Academicy - The Future of Campus Learning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --background-color: #fdfdff;
+            --card-bg: #ffffff;
+            --text-color: #555;
+            --heading-color: #1a1a2e;
+            --shadow: 0px 10px 30px rgba(0, 0, 0, 0.07);
+            --gradient: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+        
+        .container { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+        /* --- Header --- */
+        header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid #eee;
+        }
+        .navbar { display: flex; justify-content: space-between; align-items: center; height: 75px; }
+        .logo { font-size: 1.8rem; font-weight: 800; color: var(--heading-color); text-decoration: none; }
+        .logo span { background: var(--gradient); -webkit-background-clip: text; color: transparent; }
+        .nav-links { list-style: none; display: flex; gap: 40px; }
+        .nav-links a { text-decoration: none; color: var(--heading-color); font-weight: 600; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--primary-color); }
+        .btn { padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
+        .btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(37, 117, 252, 0.4); }
+
+        /* --- Hero Section --- */
+        #hero {
+            padding: 100px 0;
+            text-align: center;
+            background: linear-gradient(180deg, #f3f6ff 0%, #ffffff 100%);
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hero-content h1 { font-size: 3.8rem; font-weight: 800; line-height: 1.2; color: var(--heading-color); margin-bottom: 20px; }
+        .hero-content h1 .highlight { background: var(--gradient); -webkit-background-clip: text; color: transparent; }
+        .hero-content p { font-size: 1.2rem; max-width: 650px; margin: 0 auto 30px; }
+
+        /* --- Generic Section Styling --- */
+        .section { padding: 100px 0; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title h2 { font-size: 2.8rem; font-weight: 800; color: var(--heading-color); margin-bottom: 15px; }
+        .section-title p { max-width: 600px; margin: 0 auto; }
+        
+        /* --- Features Section --- */
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .feature-card {
+            background: var(--card-bg);
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s;
+            border-top: 4px solid transparent;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-top-color: var(--primary-color);
+        }
+        .feature-card .icon { font-size: 3rem; background: var(--gradient); -webkit-background-clip: text; color: transparent; margin-bottom: 20px; }
+        .feature-card h3 { font-size: 1.5rem; color: var(--heading-color); margin-bottom: 10px; }
+
+        /* --- How It Works Section --- */
+        .steps-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 50px; text-align: center; }
+        .step-card .step-number { font-size: 3rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; color: transparent; }
+        .step-card h3 { font-size: 1.5rem; margin: 15px 0; color: var(--heading-color); }
+
+        /* --- Gallery Section --- */
+        #gallery { background-color: #f9faff; }
+
+        /* --- NEW STYLES FOR THE LOGO --- */
+        .college-logo-container {
+            text-align: center;      /* Centers the logo */
+            margin: -20px 0 50px 0;  /* Adds space around the logo */
+        }
+        .college-logo {
+            max-width: 130px;        /* Controls the size of the logo */
+            height: auto;
+            border-radius: 50%;      /* Makes the logo circular */
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1); /* Adds a soft shadow */
+            background-color: #fff;  /* White background for the logo */
+            padding: 10px;           /* Space between logo and its circular border */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth animation */
+        }
+        .college-logo:hover {
+            transform: scale(1.05) translateY(-5px); /* Lifts and enlarges the logo on hover */
+            box-shadow: 0px 12px 30px rgba(106, 17, 203, 0.2); /* Enhances shadow on hover */
+        }
+        /* --- END OF NEW STYLES --- */
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 250px);
+            gap: 15px;
+        }
+        .gallery-item { overflow: hidden; border-radius: 12px; position: relative; }
+        .gallery-item img, .gallery-item iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .gallery-item:hover img, .gallery-item:hover iframe {
+            transform: scale(1.1);
+        }
+        .item-1 { grid-column: 1 / 2; grid-row: 1 / 3; }
+        .item-2 { grid-column: 2 / 4; grid-row: 1 / 2; }
+        .item-3 { grid-column: 2 / 3; grid-row: 2 / 3; }
+        .item-4 { grid-column: 3 / 4; grid-row: 2 / 3; }
+        
+        /* --- CTA Section --- */
+        .cta-container {
+            background: var(--gradient); border-radius: 20px; padding: 80px 50px;
+            text-align: center; color: #fff; box-shadow: 0 15px 30px rgba(37, 117, 252, 0.3);
+        }
+        .cta-container h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 25px; }
+        .btn-light { background: #fff; color: var(--primary-color); }
+        .btn-light:hover { background: #f0f0f0; }
+
+        /* --- Footer --- */
+        footer { background: var(--heading-color); color: #fff; padding: 60px 0 30px; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 50px; margin-bottom: 50px; }
+        .footer-col h4 { font-size: 1.3rem; margin-bottom: 20px; }
+        .footer-col a, .footer-col ul li { color: #ccc; text-decoration: none; list-style: none; margin-bottom: 10px; transition: color 0.3s; }
+        .footer-col a:hover, .footer-col ul li a:hover { color: #fff; }
+        .footer-socials a { font-size: 1.5rem; margin-right: 15px; }
+        .footer-bottom { text-align: center; padding-top: 30px; border-top: 1px solid #333; color: #ccc; }
+
+        /* --- Animation --- */
+        .reveal { opacity: 0; transform: translateY(50px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="home.html" class="logo">SV<span>Academicy</span></a>
+                <ul class="nav-links">
+                    <li><a href="#hero">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="team2.html">About Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <a href="login.html" class="btn btn-primary">Student Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero">
+            <div class="container hero-content reveal">
+                <h1>The <span class="highlight">Future of Campus</span> Learning is Here.</h1>
+                <p>Welcome to SV Academicy, the exclusive platform for students of Shree Venkateshwara Hi-Tech Engineering College. Take assessments, showcase projects, and climb the leaderboard.</p>
+                <a href="login.html" class="btn btn-primary">Get Started Now &rarr;</a>
+            </div>
+        </section>
+
+        <section id="features" class="section">
+            <div class="container">
+                <div class="section-title reveal">
+                    <h2>Why SV Academicy?</h2>
+                    <p>Our platform is built to provide a competitive edge to every student on campus.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card reveal" style="transition-delay: 0.1s;">
+                        <div class="icon"><i class='bx bx-edit'></i></div>
+                        <h3>Interactive Assessments</h3>
+                        <p>Engage with dynamic quizzes and tests designed to sharpen your skills and knowledge base.</p>
+                    </div>
+                    <div class="feature-card reveal" style="transition-delay: 0.2s;">
+                        <div class="icon"><i class='bx bx-rocket'></i></div>
+                        <h3>Project Portfolio</h3>
+                        <p>Showcase your projects in the community feed, get feedback, and build your digital portfolio.</p>
+                    </div>
+                    <div class="feature-card reveal" style="transition-delay: 0.3s;">
+                        <div class="icon"><i class='bx bx-trophy'></i></div>
+                        <h3>Live Leaderboard</h3>
+                        <p>Compete with your peers, track your progress, and see where you stand among the best on campus.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="section">
+             <div class="container">
+                <div class="section-title reveal">
+                    <h2>Achieve Success in 3 Simple Steps</h2>
+                </div>
+                <div class="steps-container">
+                    <div class="step-card reveal">
+                        <div class="step-number">01</div>
+                        <h3>Register & Profile</h3>
+                        <p>Sign up and complete your student profile to get started.</p>
+                    </div>
+                    <div class="step-card reveal" style="transition-delay: 0.2s;">
+                        <div class="step-number">02</div>
+                        <h3>Compete & Showcase</h3>
+                        <p>Participate in assessments and post your projects to the feed.</p>
+                    </div>
+                    <div class="step-card reveal" style="transition-delay: 0.4s;">
+                        <div class="step-number">03</div>
+                        <h3>Get Recognized</h3>
+                        <p>Climb the ranks and get noticed by faculty and peers.</p>
+                    </div>
+                </div>
+             </div>
+        </section>
+
+        <section id="gallery" class="section">
+            <div class="container">
+                <div class="section-title reveal">
+                    <h2>Life at Shree Venkateshwara</h2>
+                    <p>A glimpse into our vibrant campus life and innovative environment in Erode.</p>
+                </div>
+
+                <div class="college-logo-container reveal">
+                    <img src="SV LOGO.jpg" alt="SVHEC College Logo" class="college-logo">
+                </div>
+
+                <div class="gallery-grid">
+                    <div class="gallery-item item-1 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Campus"></div>
+                    
+                    <div class="gallery-item item-3 reveal">
+                        <iframe 
+                            src="https://www.youtube.com/embed/KbOIlyPVcFw?autoplay=1&mute=1&loop=1&playlist=KbOIlyPVcFw&controls=0&showinfo=0&autohide=1" 
+                            frameborder="0" 
+                            allow="autoplay; encrypted-media" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    
+                    <div class="gallery-item item-2 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Labs"></div>
+                    <div class="gallery-item item-4 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Students"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="cta" class="section">
+            <div class="container reveal">
+                <div class="cta-container">
+                    <h2>Ready to Test Your Skills?</h2>
+                    <a href="login.html" class="btn btn-light">Login and Take a Test Now</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>SV<span>Academicy</span></h4>
+                    <p>An initiative by the students of Shree Venkateshwara Hi-Tech Engineering College, Erode, to foster a culture of learning and competition.</p>
+                    <div class="footer-socials">
+                        <a href="https://www.facebook.com/svhec.svhec?mibextid=ZbWKwL"><i class='bx bxl-facebook-square'></i></a>
+                        <a href="https://www.instagram.com/life_at_svh_easy/"><i class='bx bxl-instagram'></i></a>
+                        <a href="https://www.linkedin.com/in/lokesh-m-265b832b3"><i class='bx bxl-linkedin-square'></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="team2.html">About Us</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                 <div class="footer-col">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li>SV Nagar, Erode-Gobichettipalayam</li>
+                        <li>Main Road, Erode, Tamil Nadu.</li>
+                        <li>developersstudio.site@gmail.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 SV Academicy | Designed by Code Crafters
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Scroll Reveal Animation
+        const revealElements = document.querySelectorAll('.reveal');
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        revealElements.forEach(el => {
+            revealObserver.observe(el);
+        });
+    });
+    </script>
+</body>
+</html>

@@ -36,44 +36,44 @@
                 url('https://www.svhec.com/wp-content/uploads/2024/09/banner-scaled.jpg') no-repeat center center;
             background-size: cover;
             background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         
         /* --- Header --- */
         header {
-            position: sticky;
-            top: 0;
-            width: 100%;
+            position: sticky; top: 0; width: 100%;
             background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
+            backdrop-filter: blur(10px); z-index: 1000;
             border-bottom: 1px solid #eee;
         }
         .container { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
         .navbar { display: flex; justify-content: space-between; align-items: center; height: 75px; }
-        .logo { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--heading-color); text-decoration: none; }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; }
+
+        .logo { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--heading-color); text-decoration: none; display: flex; align-items: center; gap: 10px;}
         .logo span { background: var(--gradient); -webkit-background-clip: text; color: transparent; }
-        .nav-links { list-style: none; display: flex; gap: 40px; }
+        .header-logo { height: 40px; width: auto; }
+        
+        .nav-links { list-style: none; display: flex; align-items: center; gap: 40px; }
         .nav-links a { font-family: 'Inter', sans-serif; text-decoration: none; color: var(--heading-color); font-weight: 600; transition: color 0.3s; }
         .nav-links a:hover { color: var(--primary-color); }
-        .btn { font-family: 'Inter', sans-serif; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
-        .btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3); }
-        .btn-primary.active { background: #555; cursor: default; box-shadow: none; }
-        .btn-primary:hover:not(.active) { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(37, 117, 252, 0.4); }
+
+        .menu-icon { display: none; font-size: 2.2rem; cursor: pointer; color: var(--heading-color); z-index: 1001;}
+        .menu-icon .bx-x { display: none; }
 
         main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: calc(100vh - 75px); /* Full height minus header */
+            display: flex; justify-content: center; align-items: center;
+            flex-grow: 1;
             padding: 2rem 1rem;
         }
 
         .auth-card {
-            width: 800px;
-            display: flex;
+            width: 800px; display: flex;
             background: var(--card-bg-form);
-            box-shadow: var(--shadow-form);
-            border-radius: 1rem;
+            box-shadow: var(--shadow-form); border-radius: 1rem;
             overflow: hidden;
         }
         .auth-banner {
@@ -103,11 +103,42 @@
         .form-footer { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; }
         .form-footer a { color: var(--primary-color-form); text-decoration: none; font-weight: 600; cursor: pointer; }
         .form-footer a:hover { text-decoration: underline; }
+        
+        footer {
+            width: 100%; text-align: center;
+            padding: 1.5rem 1rem; color: var(--text-color-form);
+            font-size: 0.9rem;
+        }
+        footer a { color: var(--primary-color-form); text-decoration: none; font-weight: 600; }
+        footer a:hover { text-decoration: underline; }
+
         @media(max-width: 850px){
-            .auth-card { width: 100%; max-width: 420px; flex-direction: column; }
+            .auth-card { 
+                width: 100%; max-width: 420px; flex-direction: column;
+                box-shadow: none; border: 1px solid #eee;
+            }
             .auth-banner { display: none; }
             .auth-form-wrapper { width: 100%; padding: 2rem; }
-            .nav-links { display: none; } /* Hide nav links on mobile */
+            
+            /* --- Header Responsive --- */
+            .menu-icon { display: block; }
+            .nav-links {
+                display: flex;
+                position: absolute;
+                top: 75px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 75px);
+                background-color: #fdfdff;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 50px;
+                transition: left 0.5s ease-in-out;
+            }
+            .nav-links.active {
+                left: 0;
+            }
         }
     </style>
 </head>
@@ -116,12 +147,22 @@
     <header>
         <div class="container">
             <nav class="navbar">
-                <a href="index.html" class="logo">SV<span>Academy</span></a>
-                <ul class="nav-links">
+                <div class="header-left">
+                    <div class="menu-icon" id="menu-icon">
+                        <i class='bx bx-menu'></i>
+                        <i class='bx bx-x'></i>
+                    </div>
+                    <a href="index.html" class="logo">
+                        <img src="SV LOGO.jpg" alt="SV Academicy Logo" class="header-logo">
+                        SV<span>Academicy</span>
+                    </a>
+                </div>
+                
+                <ul class="nav-links" id="nav-links">
                     <li><a href="index.html">Home</a></li>
-                    <li><a href="index.html">Features</a></li>
+                    <li><a href="index.html#features">Features</a></li>
                     <li><a href="team2.html">About Us</a></li>
-                    <li><a href="index.html">Contact</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
                 </ul>
             </nav>
         </div>
@@ -130,6 +171,7 @@
     <main>
         <div class="auth-card">
             <div class="auth-banner">
+                <i class='bx bxs-user-circle' style="font-size: 5rem; margin-bottom: 1rem;"></i>
                 <h2>Welcome Back!</h2>
                 <p>Enter your details to access your account.</p>
             </div>
@@ -139,21 +181,25 @@
                     <div class="form-group">
                         <label for="login-email">Email</label>
                         <i class='bx bxs-envelope'></i>
-                        <input type="email" id="login-email" required>
+                        <input type="email" id="login-email" placeholder="Enter your email" required>
                     </div>
                     <div class="form-group">
                         <label for="login-password">Password</label>
                         <i class='bx bxs-lock-alt'></i>
-                        <input type="password" id="login-password" required>
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
                     </div>
                     <button type="submit" class="submit-btn">Login</button>
                     <div class="form-footer">
-                        <span>Don't have an account? </span><a href="team2.html">Contact Code Crafters</a>
+                        <span>Don't have an account? </span><a href="team2.html" target="_blank">Contact Code Crafters</a>
                     </div>
                 </form>
             </div>
         </div>
     </main>
+    
+    <footer>
+        <p>&copy; 2025 SV Academicy. All Rights Reserved | Developed by <a href="team2.html" target="_blank">Code Crafters</a></p>
+    </footer>
 
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
@@ -216,6 +262,31 @@
             }
         });
     </script>
+
+    <script>
+        const menuIcon = document.getElementById('menu-icon');
+        const navLinks = document.getElementById('nav-links');
+        const menuIconOpen = menuIcon.querySelector('.bx-menu');
+        const menuIconClose = menuIcon.querySelector('.bx-x');
+
+        menuIcon.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            
+            const isActive = navLinks.classList.contains('active');
+            menuIconOpen.style.display = isActive ? 'none' : 'block';
+            menuIconClose.style.display = isActive ? 'block' : 'none';
+        });
+
+        const allNavLinks = document.querySelectorAll('#nav-links a');
+        allNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                    menuIconOpen.style.display = 'block';
+                    menuIconClose.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
-

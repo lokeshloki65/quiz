@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SV Academicy - The Future of Campus Learning</title>
+    <title>SV Academy - The Future of Campus Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -42,7 +42,23 @@
             border-bottom: 1px solid #eee;
         }
         .navbar { display: flex; justify-content: space-between; align-items: center; height: 75px; }
-        .logo { font-size: 1.8rem; font-weight: 800; color: var(--heading-color); text-decoration: none; }
+        
+        /* --- UPDATED LOGO STYLE FOR PERFECT FIT --- */
+        .logo { 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            color: var(--heading-color); 
+            text-decoration: none; 
+            display: flex; /* Aligns logo and text */
+            align-items: center; /* Vertically centers them */
+            gap: 12px; /* Space between logo and text */
+        }
+        .header-logo {
+            height: 45px; /* Controls the logo height */
+            width: auto;
+        }
+        /* --- END OF UPDATE --- */
+
         .logo span { background: var(--gradient); -webkit-background-clip: text; color: transparent; }
         .nav-links { list-style: none; display: flex; gap: 40px; }
         .nav-links a { text-decoration: none; color: var(--heading-color); font-weight: 600; transition: color 0.3s; }
@@ -97,7 +113,7 @@
         /* --- Gallery Section --- */
         #gallery { background-color: #f9faff; }
 
-        /* --- NEW STYLES FOR THE LOGO --- */
+        /* --- STYLES FOR THE LOGO --- */
         .college-logo-container {
             text-align: center;      /* Centers the logo */
             margin: -20px 0 50px 0;  /* Adds space around the logo */
@@ -115,7 +131,7 @@
             transform: scale(1.05) translateY(-5px); /* Lifts and enlarges the logo on hover */
             box-shadow: 0px 12px 30px rgba(106, 17, 203, 0.2); /* Enhances shadow on hover */
         }
-        /* --- END OF NEW STYLES --- */
+        /* --- END OF STYLES --- */
 
         .gallery-grid {
             display: grid;
@@ -166,7 +182,10 @@
     <header>
         <div class="container">
             <nav class="navbar">
-                <a href="home.html" class="logo">SV<span>Academicy</span></a>
+                <a href="index.html" class="logo">
+                    <img src="SV LOGO.jpg" alt="SV Academicy Logo" class="header-logo">
+                    SV<span>Academicy</span>
+                </a>
                 <ul class="nav-links">
                     <li><a href="#hero">Home</a></li>
                     <li><a href="#features">Features</a></li>

@@ -31,7 +31,7 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        #loading-overlay p { color: #fff; font-weight: 500; font-size: 1.1rem; }
+        #loading-overlay p { color: #fff; font-weight: 500; font-size: 1.1rem; text-align: center; padding: 0 1rem;}
         
         .modal, .instructions-container {
             background: var(--card-bg); padding: 2rem; border-radius: 1rem;
@@ -97,22 +97,22 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         @media (max-width: 992px) {
-              .test-body { flex-direction: column; padding: 1rem; overflow-y: auto; }
-              .question-area { padding: 1.5rem; }
-              .palette-area { width: 100%; min-width: unset; max-height: 350px; }
-              .question-text { font-size: 1rem; }
-         }
+             .test-body { flex-direction: column; padding: 1rem; overflow-y: auto; }
+             .question-area { padding: 1.5rem; }
+             .palette-area { width: 100%; min-width: unset; max-height: 350px; }
+             .question-text { font-size: 1rem; }
+        }
         @media (max-width: 576px) {
-              .test-header { flex-direction: column; align-items: flex-start; gap: 1rem; padding: 1rem; }
-              .test-title h2 { font-size: 1.1rem; }
-              .timer-container { align-self: flex-start; }
-              .btn-submit { width: 100%; }
-              .question-header h3 { font-size: 1rem; }
-              .option { padding: 0.8rem; font-size: 0.9rem; }
-              .question-footer { flex-direction: column; gap: 0.75rem; }
-              .question-footer .btn { width: 100%; }
-              .modal, .instructions-container { padding: 1.5rem; }
-         }
+             .test-header { flex-direction: column; align-items: flex-start; gap: 1rem; padding: 1rem; }
+             .test-title h2 { font-size: 1.1rem; }
+             .timer-container { align-self: flex-start; }
+             .btn-submit { width: 100%; }
+             .question-header h3 { font-size: 1rem; }
+             .option { padding: 0.8rem; font-size: 0.9rem; }
+             .question-footer { flex-direction: column; gap: 0.75rem; }
+             .question-footer .btn { width: 100%; }
+             .modal, .instructions-container { padding: 1.5rem; }
+        }
     </style>
 </head>
 <body>
@@ -194,7 +194,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Firebase Config (Original)
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
         authDomain: "student-central-hub-5w4l8.firebaseapp.com",
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State Variables
     let questions = [], userAnswers = {}, currentQuestionIndex = 0;
     let timerInterval, testId, userId, focusLossCount = 0;
-    let isTestSubmitted = false; // To prevent multiple submissions
+    let isTestSubmitted = false;
     const startTime = firebase.firestore.Timestamp.now();
     let questionStates = []; 
 
@@ -290,13 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             questions = questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Shuffle Questions
-            for (let i = questions.length - 1; i > 0; i--) {
+            // Shuffle Questions (optional, can be enabled if needed)
+            /* for (let i = questions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questions[i], questions[j]] = [questions[j], questions[i]];
-            }
+            } */
             
-            // Shuffle Options
+            // Shuffle Options for each question
             questions.forEach(q => {
                 if (q.options && Array.isArray(q.options)) {
                     for (let i = q.options.length - 1; i > 0; i--) {
@@ -316,8 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             testContainer.classList.add('loaded');
             
             // Start malpractice listeners
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            startMalpracticeListeners();
 
         } catch (error) {
             handleFatalError(error.message);
@@ -339,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderQuestion(index) {
-        if (questionStates[currentQuestionIndex].status !== 'not-visited') {
+        if (questionStates[currentQuestionIndex] && questionStates[currentQuestionIndex].status !== 'not-visited') {
             updateQuestionStatus(currentQuestionIndex);
         }
         currentQuestionIndex = index;
@@ -370,11 +369,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateSummary();
             });
             optionLabel.appendChild(radioInput);
+            // Using createTextNode is safer against XSS than innerHTML
             optionLabel.appendChild(document.createTextNode(optionText));
             optionsContainer.appendChild(optionLabel);
         });
         prevBtn.disabled = index === 0;
         nextBtn.textContent = (index === questions.length - 1) ? 'Save & Finish' : 'Save & Next';
+        updateSummary(); // Call update summary after setting buttons
         renderPalette();
     }
     
@@ -405,11 +406,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'answered': answered++; break;
                 case 'answered-and-marked': answered++; marked++; break;
                 case 'not-answered': notAnswered++; break;
-                case 'marked-for-review': marked++; notAnswered++; break; // Marked but not answered counts for both
+                case 'marked-for-review': marked++; notAnswered++; break;
                 case 'not-visited': notVisited++; break;
             }
         });
         answeredCountEl.textContent = answered;
+        // Correctly sum not-answered and not-visited for the "Not Answered" summary
         notAnsweredCountEl.textContent = notAnswered + notVisited;
         markedCountEl.textContent = marked;
         notVisitedCountEl.textContent = notVisited;
@@ -431,11 +433,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
+    // MODIFIED: This function now enforces answering all questions.
     function attemptSubmission() {
-        const unansweredCount = questions.length - Object.keys(userAnswers).length;
-        if (unansweredCount > 0) {
-            showCustomConfirm(`You have ${unansweredCount} unanswered question(s). Are you sure you want to submit?`, () => submitTest("User submission"));
+        const totalNotAnswered = parseInt(notAnsweredCountEl.textContent);
+        if (totalNotAnswered > 0) {
+            // Show a simple alert instead of a confirmation if questions are unanswered.
+            showCustomAlert("You must answer all questions before you can submit the test.");
         } else {
+            // Only show confirmation if all questions are answered.
             showCustomConfirm('Are you sure you want to submit the test?', () => submitTest("User submission"));
         }
     }
@@ -448,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentQuestionIndex < questions.length - 1) {
             renderQuestion(currentQuestionIndex + 1);
         } else {
+            // The logic here is now handled by attemptSubmission
             attemptSubmission();
         }
     });
@@ -472,8 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const qId = questions[currentQuestionIndex].id;
         if (userAnswers.hasOwnProperty(qId)) {
             delete userAnswers[qId];
+            // Render the question again to update the radio button state
+            renderQuestion(currentQuestionIndex); 
+            // After re-rendering, update status, palette and summary
             updateQuestionStatus(currentQuestionIndex);
-            renderQuestion(currentQuestionIndex);
+            renderPalette();
             updateSummary();
         }
     });
@@ -483,9 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isTestSubmitted = true;
 
         clearInterval(timerInterval);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-        // The keydown listener remains to prevent actions during submission screen
+        stopMalpracticeListeners();
 
         loadingOverlay.style.display = 'flex';
         loadingText.textContent = 'Submitting... Please do not close this window.';
@@ -500,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userId: userId, testId: testId, answers: userAnswers, score: score,
                 totalMarks: questions.length, startTime: startTime,
                 endTime: firebase.firestore.FieldValue.serverTimestamp(), status: 'Completed',
-                submissionReason: reason
+                submissionReason: reason // This is key for admin panel
             };
             
             await db.collection('submissions').add(submissionData);
@@ -519,41 +526,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MALPRACTICE HANDLING ---
 
-    /**
-     * NEW: Central function to handle any malpractice attempt.
-     * It increments a counter and shows a warning or auto-submits the test.
-     * @param {string} reason - The reason for the malpractice flag (e.g., "switching tabs").
-     */
     function handleMalpracticeAttempt(reason) {
         if (isTestSubmitted) return;
         focusLossCount++;
+        
         if (focusLossCount === 1) {
-            showCustomAlert(`Warning: ${reason} is not allowed. If this happens again, your test will be submitted automatically.`);
+            let message = `Warning: ${reason} is not allowed.`;
+            if (reason.includes("full-screen")) {
+                message += " Please return to full-screen mode to continue.";
+            }
+            message += " If this happens again, your test will be submitted automatically.";
+            showCustomAlert(message);
         } else if (focusLossCount > 1) {
-            // Hide any open modal before submitting
-            warningOverlay.style.display = 'none';
-            submitTest(`Malpractice: ${reason} (Exceeded warning limit)`);
+            warningOverlay.style.display = 'none'; // Hide any open modal
+            // The reason will now be recorded for the admin, e.g., "Malpractice: Exiting full-screen mode"
+            submitTest(`Malpractice: ${reason}`); 
         }
     }
 
-    // MODIFIED: This now calls the central handler.
     function handleVisibilityChange() {
         if (document.hidden) {
-            handleMalpracticeAttempt("Leaving the test window");
+            handleMalpracticeAttempt("Switching tabs or minimizing the window");
         }
     }
     
     function handleFullscreenChange() {
         if (!document.fullscreenElement && !isTestSubmitted) {
             handleMalpracticeAttempt("Exiting full-screen mode");
-            // Try to re-enter fullscreen. Even if it fails, the warning is logged.
-            try { document.documentElement.requestFullscreen(); } catch(e) {}
+            // Attempt to re-enter fullscreen to guide the user back.
+            try { 
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            } catch(e) {
+                 console.warn("Could not automatically re-enter fullscreen.");
+            }
         }
     }
 
+    // NEW: Handles key presses for malpractice
+    function handleKeyDown(e) {
+        let reason = null;
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+            reason = "Attempting to open developer tools";
+        } else if (e.altKey && e.key === 'Tab') {
+            reason = "Using Alt+Tab to switch windows";
+        } else if (e.key === 'Meta' || e.key === 'OS' || e.key === "Super" || e.key === "Windows") {
+            reason = "Pressing the OS key (Windows/Command)";
+        }
+
+        if (reason) {
+            e.preventDefault();
+            handleMalpracticeAttempt(reason);
+        }
+    }
+    
+    // NEW: Block right-click context menu
+    function handleContextMenu(e) {
+        e.preventDefault();
+    }
+
+    // NEW: Functions to centralize adding/removing listeners
+    function startMalpracticeListeners() {
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('contextmenu', handleContextMenu);
+    }
+
+    function stopMalpracticeListeners() {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('contextmenu', handleContextMenu);
+    }
+
+    // --- UI MODALS ---
+
     function showCustomAlert(message, callback) {
         modalTitle.textContent = "Alert";
-        modalText.textContent = message;
+        modalText.innerHTML = message; // Use innerHTML for potential line breaks
         modalOkBtn.style.display = 'inline-block';
         modalConfirmBtn.style.display = 'none';
         modalCancelBtn.style.display = 'none';
@@ -602,42 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(redirect) {
             setTimeout(() => { window.location.href = 'assessments.html'; }, 4000);
         }
-    }
-});
-
-// --- GLOBAL MALPRACTICE LISTENERS ---
-
-// MODIFIED & ENHANCED: Blocks Right-click, Dev Tools, and now Alt+Tab and OS keys.
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-
-document.addEventListener('keydown', function(e) {
-    // This function now calls the malpractice handler from the main script.
-    // We check if the test has started by looking for the test container.
-    const testContainer = document.getElementById('test-container');
-    if (!testContainer || !testContainer.classList.contains('loaded')) return;
-
-    // Check for Dev Tools shortcuts
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
-        e.preventDefault();
-        // The function handleMalpracticeAttempt is defined inside DOMContentLoaded, so we can't call it directly.
-        // A simple alert can be a fallback, but the primary detection is visibilitychange.
-        console.warn("Malpractice attempt detected: DevTools shortcut.");
-    }
-
-    // NEW: Check for Alt+Tab
-    if (e.altKey && e.key === 'Tab') {
-        e.preventDefault();
-        console.warn("Malpractice attempt detected: Alt+Tab shortcut.");
-        // Since handleMalpracticeAttempt is out of scope, we rely on the visibilitychange event that this action would trigger.
-        // The preventDefault stops the switch, but the attempt itself is noteworthy.
-    }
-    
-    // NEW: Block OS key (Windows key / Mac Command key in some contexts)
-    if (e.key === 'Meta' || e.key === 'OS') {
-        e.preventDefault();
-        console.warn("Malpractice attempt detected: OS key pressed.");
     }
 });
 </script>

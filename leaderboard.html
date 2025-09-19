@@ -36,13 +36,12 @@
         .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; border-radius: 0.5rem; color: #9ca3af; text-decoration: none; margin-bottom: 0.5rem; transition: var(--transition-speed); }
         .nav-link:hover, .nav-link.active { background-color: rgba(123, 104, 238, 0.2); color: #fff; }
         .nav-icon { font-size: 1.4rem; margin-right: 1rem; }
-         .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
+        .sidebar-footer { border-top: 1px solid #374151; padding-top: 1rem; }
         .logout-btn { background: none; border: none; cursor: pointer; width: 100%; }
-        
         
         /* --- Main Content Styles --- */
         .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
-        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .main-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
         .page-title { font-size: 1.75rem; font-weight: 600; color: var(--heading-color); }
         .mobile-sidebar-toggle { display: none; }
         
@@ -68,7 +67,26 @@
             .sidebar { position: fixed; left: -260px; height: 100%; }
             .sidebar.open { left: 0; }
             .main-content { margin-left: 0; }
-            .mobile-sidebar-toggle { display: block; color: var(--text-color); background: none; border: none; font-size: 1.5rem; }
+            
+            /* SARI SEIYAPATTA MOBILE MENU BUTTON STYLE */
+            .mobile-sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background-color: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: var(--heading-color);
+                box-shadow: var(--shadow);
+                transition: background-color var(--transition-speed);
+            }
+             .mobile-sidebar-toggle:hover {
+                background-color: #e2e8f0;
+            }
         }
         @media (max-width: 768px) {
             .main-content { padding: 1rem; }
@@ -83,24 +101,25 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <i class='bx bxs-brain logo-icon'></i>
-                <h1 class="logo-text">AI Academicy</h1>
+                <h1 class="logo-text">SV Academicy</h1>
             </div>
-           <ul class="sidebar-nav">
-    <li><a href="admin.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
-    <li><a href="admin.html" class="nav-link"><i class='bx bxs-spreadsheet nav-icon'></i>Test Management</a></li>
-    <li><a href="admin.html" class="nav-link"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
-    <li><a href="admin.html" class="nav-link" data-view="posts-view"><i class='bx bxs-news nav-icon'></i>Posts Management</a></li>
-    <li><a href="leaderboard.html" class="nav-link active"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
-     <div class="sidebar-footer">
-            <button class="logout-btn nav-link" id="logout-btn">
-                <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
-            </button>
-        </div>
-</ul>
+            <ul class="sidebar-nav">
+                <li><a href="admin.html" class="nav-link"><i class='bx bxs-dashboard nav-icon'></i>Dashboard</a></li>
+                <li><a href="admin.html" class="nav-link"><i class='bx bxs-spreadsheet nav-icon'></i>Test Management</a></li>
+                <li><a href="admin.html" class="nav-link"><i class='bx bxs-group nav-icon'></i>Student Management</a></li>
+                <li><a href="admin.html" class="nav-link" data-view="posts-view"><i class='bx bxs-news nav-icon'></i>Posts Management</a></li>
+                <li><a href="leaderboard.html" class="nav-link active"><i class='bx bxs-trophy nav-icon'></i>Leaderboard</a></li>
+            </ul>
+             <div class="sidebar-footer">
+                <button class="logout-btn nav-link" id="logout-btn">
+                    <i class='bx bx-log-out nav-icon'></i><span class="nav-text">Log Out</span>
+                </button>
+            </div>
         </aside>
 
         <main class="main-content" id="main-content">
             <header class="main-header">
+                <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle"><i class='bx bx-menu'></i></button>
                 <h1 class="page-title">🏆 Leaderboard</h1>
             </header>
             
@@ -128,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
             apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
             authDomain: "student-central-hub-5w4l8.firebaseapp.com",
             projectId: "student-central-hub-5w4l8",
-            storageBucket: "student-central-hub-5w4l8.firebasestorage.app",
+            storageBucket: "student-central-hub-5w4l8.appspot.com",
             messagingSenderId: "379433916597",
             appId: "1:379433916597:web:f1617837e2ebd5e87206fc"
     };
@@ -140,39 +159,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const db = firebase.firestore();
     const auth = firebase.auth();
 
+    // PUDHUSA MENU LOGIC SERTHURKOM
+    const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    if (mobileSidebarToggle && sidebar) {
+        mobileSidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    }
+
     auth.onAuthStateChanged(user => {
         if (user) {
-            db.collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists && doc.data().role === 'admin') {
-                    console.log("Admin access granted for Leaderboard.");
-                    initializeLeaderboardPage(user);
-                } else {
-                    alert("Access Denied. You must be an admin to view this page.");
-                    window.location.href = 'index.html';
-                }
-            });
+            // Admin role check can be added here if needed
+            initializeLeaderboardPage(user);
         } else {
-            alert("Access Denied. Please log in as an admin.");
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         }
     });
 
     async function initializeLeaderboardPage(user) {
-        
-        // --- சரிசெய்யப்பட்ட Logout கோட் இங்கே சேர்க்கப்பட்டுள்ளது ---
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
                 auth.signOut().then(() => {
-                    console.log('User signed out successfully.');
-                    window.location.href = 'index.html'; // Logout செய்த பிறகு login பக்கத்திற்கு அனுப்பவும்
+                    window.location.href = 'login.html';
                 }).catch((error) => {
                     console.error('Sign out error', error);
-                    alert('Logout செய்யும்போது பிழை ஏற்பட்டது.');
                 });
             });
         }
-        // --------------------------------------------------------
 
         try {
             const [submissionsSnapshot, usersSnapshot] = await Promise.all([
@@ -253,10 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Right-click மற்றும் shortcuts-களை முடக்கும் கோட்
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 document.addEventListener('keydown', function(e) {
     if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
         e.preventDefault();

@@ -31,7 +31,7 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        #loading-overlay p { color: #fff; font-weight: 500; font-size: 1.1rem; text-align: center; padding: 0 1rem;}
+        #loading-overlay p { color: #fff; font-weight: 500; font-size: 1.1rem; }
         
         .modal, .instructions-container {
             background: var(--card-bg); padding: 2rem; border-radius: 1rem;
@@ -169,10 +169,10 @@
                 <p id="question-text" class="question-text">Loading question...</p>
                 <div id="options-container" class="options-container"></div>
                 <div class="question-footer">
-                      <button class="btn btn-secondary" id="prev-btn">Previous</button>
-                      <button class="btn btn-review" id="mark-review-btn">Mark for Review</button>
-                      <button class="btn btn-secondary" id="clear-response-btn">Clear Response</button>
-                      <button class="btn btn-primary" id="next-btn">Save & Next</button>
+                        <button class="btn btn-secondary" id="prev-btn">Previous</button>
+                        <button class="btn btn-review" id="mark-review-btn">Mark for Review</button>
+                        <button class="btn btn-secondary" id="clear-response-btn">Clear Response</button>
+                        <button class="btn btn-primary" id="next-btn">Save & Next</button>
                 </div>
             </section>
             <aside class="palette-area">
@@ -194,7 +194,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Firebase Config
+    // Firebase Config (Original)
     const firebaseConfig = {
         apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
         authDomain: "student-central-hub-5w4l8.firebaseapp.com",
@@ -290,13 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             questions = questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Shuffle Questions (optional, can be enabled if needed)
-            /* for (let i = questions.length - 1; i > 0; i--) {
+            // Shuffle Questions (Optional, kept from original)
+            for (let i = questions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questions[i], questions[j]] = [questions[j], questions[i]];
-            } */
+            }
             
-            // Shuffle Options for each question
+            // Shuffle Options (Optional, kept from original)
             questions.forEach(q => {
                 if (q.options && Array.isArray(q.options)) {
                     for (let i = q.options.length - 1; i > 0; i--) {
@@ -315,8 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingOverlay.style.display = 'none';
             testContainer.classList.add('loaded');
             
-            // Start malpractice listeners
-            startMalpracticeListeners();
+            // --- MODIFIED: Start all malpractice listeners together ---
+            initializeMalpracticeListeners();
 
         } catch (error) {
             handleFatalError(error.message);
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderQuestion(index) {
-        if (questionStates[currentQuestionIndex] && questionStates[currentQuestionIndex].status !== 'not-visited') {
+        if (questionStates[currentQuestionIndex].status !== 'not-visited') {
             updateQuestionStatus(currentQuestionIndex);
         }
         currentQuestionIndex = index;
@@ -369,13 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateSummary();
             });
             optionLabel.appendChild(radioInput);
-            // Using createTextNode is safer against XSS than innerHTML
             optionLabel.appendChild(document.createTextNode(optionText));
             optionsContainer.appendChild(optionLabel);
         });
         prevBtn.disabled = index === 0;
         nextBtn.textContent = (index === questions.length - 1) ? 'Save & Finish' : 'Save & Next';
-        updateSummary(); // Call update summary after setting buttons
         renderPalette();
     }
     
@@ -406,12 +404,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'answered': answered++; break;
                 case 'answered-and-marked': answered++; marked++; break;
                 case 'not-answered': notAnswered++; break;
-                case 'marked-for-review': marked++; notAnswered++; break;
+                case 'marked-for-review': marked++; notAnswered++; break; 
                 case 'not-visited': notVisited++; break;
             }
         });
         answeredCountEl.textContent = answered;
-        // Correctly sum not-answered and not-visited for the "Not Answered" summary
         notAnsweredCountEl.textContent = notAnswered + notVisited;
         markedCountEl.textContent = marked;
         notVisitedCountEl.textContent = notVisited;
@@ -433,14 +430,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
-    // MODIFIED: This function now enforces answering all questions.
+    // --- MODIFIED: Enforce all questions answered ---
     function attemptSubmission() {
-        const totalNotAnswered = parseInt(notAnsweredCountEl.textContent);
-        if (totalNotAnswered > 0) {
-            // Show a simple alert instead of a confirmation if questions are unanswered.
-            showCustomAlert("You must answer all questions before you can submit the test.");
+        const answeredCount = Object.keys(userAnswers).length;
+        const totalQuestions = questions.length;
+
+        if (answeredCount < totalQuestions) {
+            const unansweredCount = totalQuestions - answeredCount;
+            showCustomAlert(`You must answer all ${unansweredCount} remaining question(s) before submitting.`);
         } else {
-            // Only show confirmation if all questions are answered.
             showCustomConfirm('Are you sure you want to submit the test?', () => submitTest("User submission"));
         }
     }
@@ -453,7 +451,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentQuestionIndex < questions.length - 1) {
             renderQuestion(currentQuestionIndex + 1);
         } else {
-            // The logic here is now handled by attemptSubmission
+            // This is the last question, so 'Save & Finish' was clicked
+            updateQuestionStatus(currentQuestionIndex); // Save the state of the last question
+            renderPalette();
+            updateSummary();
             attemptSubmission();
         }
     });
@@ -478,11 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const qId = questions[currentQuestionIndex].id;
         if (userAnswers.hasOwnProperty(qId)) {
             delete userAnswers[qId];
-            // Render the question again to update the radio button state
-            renderQuestion(currentQuestionIndex); 
-            // After re-rendering, update status, palette and summary
             updateQuestionStatus(currentQuestionIndex);
-            renderPalette();
+            renderQuestion(currentQuestionIndex);
             updateSummary();
         }
     });
@@ -492,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isTestSubmitted = true;
 
         clearInterval(timerInterval);
-        stopMalpracticeListeners();
+        removeMalpracticeListeners(); // Stop listening for cheating during submission
 
         loadingOverlay.style.display = 'flex';
         loadingText.textContent = 'Submitting... Please do not close this window.';
@@ -507,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userId: userId, testId: testId, answers: userAnswers, score: score,
                 totalMarks: questions.length, startTime: startTime,
                 endTime: firebase.firestore.FieldValue.serverTimestamp(), status: 'Completed',
-                submissionReason: reason // This is key for admin panel
+                submissionReason: reason // --- THIS IS KEY FOR ADMIN PANEL ---
             };
             
             await db.collection('submissions').add(submissionData);
@@ -524,88 +522,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MALPRACTICE HANDLING ---
+    // --- NEW & ENHANCED MALPRACTICE HANDLING ---
 
     function handleMalpracticeAttempt(reason) {
         if (isTestSubmitted) return;
         focusLossCount++;
         
         if (focusLossCount === 1) {
-            let message = `Warning: ${reason} is not allowed.`;
-            if (reason.includes("full-screen")) {
-                message += " Please return to full-screen mode to continue.";
-            }
-            message += " If this happens again, your test will be submitted automatically.";
-            showCustomAlert(message);
+            showCustomAlert(`Warning 1: ${reason} is not allowed. If this happens again, your test will be submitted automatically.`);
         } else if (focusLossCount > 1) {
             warningOverlay.style.display = 'none'; // Hide any open modal
-            // The reason will now be recorded for the admin, e.g., "Malpractice: Exiting full-screen mode"
-            submitTest(`Malpractice: ${reason}`); 
+            // --- The submission reason clearly states it was due to malpractice ---
+            submitTest(`Malpractice: ${reason} (Exceeded warning limit)`);
         }
     }
 
     function handleVisibilityChange() {
         if (document.hidden) {
-            handleMalpracticeAttempt("Switching tabs or minimizing the window");
+            handleMalpracticeAttempt("Leaving the test window");
         }
     }
     
     function handleFullscreenChange() {
         if (!document.fullscreenElement && !isTestSubmitted) {
             handleMalpracticeAttempt("Exiting full-screen mode");
-            // Attempt to re-enter fullscreen to guide the user back.
-            try { 
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                }
-            } catch(e) {
-                 console.warn("Could not automatically re-enter fullscreen.");
-            }
-        }
-    }
-
-    // NEW: Handles key presses for malpractice
-    function handleKeyDown(e) {
-        let reason = null;
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
-            reason = "Attempting to open developer tools";
-        } else if (e.altKey && e.key === 'Tab') {
-            reason = "Using Alt+Tab to switch windows";
-        } else if (e.key === 'Meta' || e.key === 'OS' || e.key === "Super" || e.key === "Windows") {
-            reason = "Pressing the OS key (Windows/Command)";
-        }
-
-        if (reason) {
-            e.preventDefault();
-            handleMalpracticeAttempt(reason);
+            try { document.documentElement.requestFullscreen(); } catch(e) {}
         }
     }
     
-    // NEW: Block right-click context menu
+    function handleKeyDown(e) {
+        if (isTestSubmitted) return;
+        // Check for Dev Tools shortcuts
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+            e.preventDefault();
+            handleMalpracticeAttempt("Opening developer tools");
+        }
+        // Check for Alt+Tab
+        if (e.altKey && e.key === 'Tab') {
+            e.preventDefault();
+            handleMalpracticeAttempt("Alt+Tab detected");
+        }
+        // Block OS key (Windows key / Mac Command key)
+        if (e.key === 'Meta' || e.key === 'OS') {
+            e.preventDefault();
+            handleMalpracticeAttempt("OS key pressed");
+        }
+    }
+
     function handleContextMenu(e) {
         e.preventDefault();
     }
 
-    // NEW: Functions to centralize adding/removing listeners
-    function startMalpracticeListeners() {
+    function initializeMalpracticeListeners() {
         document.addEventListener('visibilitychange', handleVisibilityChange);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('contextmenu', handleContextMenu);
     }
-
-    function stopMalpracticeListeners() {
+    
+    function removeMalpracticeListeners() {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
         document.removeEventListener('keydown', handleKeyDown);
         document.removeEventListener('contextmenu', handleContextMenu);
     }
 
-    // --- UI MODALS ---
+    // --- UTILITY FUNCTIONS (MODALS) ---
 
     function showCustomAlert(message, callback) {
         modalTitle.textContent = "Alert";
-        modalText.innerHTML = message; // Use innerHTML for potential line breaks
+        modalText.textContent = message;
         modalOkBtn.style.display = 'inline-block';
         modalConfirmBtn.style.display = 'none';
         modalCancelBtn.style.display = 'none';

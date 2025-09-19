@@ -249,12 +249,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     initializeAdminPanel(); 
                 } else {
                     alert("Access Denied. You must be an admin to view this page.");
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 }
             });
         } else {
             alert("Access Denied. Please log in as an admin.");
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         }
     });
 
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
             logoutBtn.addEventListener('click', () => {
                 auth.signOut().then(() => {
                     console.log('User signed out successfully.');
-                    window.location.href = 'index.html'; // Logout செய்த பிறகு login பக்கத்திற்கு அனுப்பவும்
+                    window.location.href = 'login.html'; // Logout செய்த பிறகு login பக்கத்திற்கு அனுப்பவும்
                 }).catch((error) => {
                     console.error('Sign out error', error);
                     alert('Logout செய்யும்போது பிழை ஏற்பட்டது.');
@@ -878,5 +878,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 

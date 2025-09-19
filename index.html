@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SV Academicy - The Future of Campus Learning</title> 
+    <title>SV Academicy - The Future of Campus Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -250,7 +250,7 @@
                     <li><a href="#features">Features</a></li>
                     <li><a href="team2.html">About Us</a></li>
                     <li><a href="#contact">Contact</a></li>
-                    <li><a href="login.html" class="btn btn-primary"> Login</a></li>
+                    <li><a href="login.html" class="btn btn-primary">Login</a></li>
                 </ul>
             </nav>
         </div>
@@ -326,7 +326,7 @@
                     <img src="SV LOGO.jpg" alt="SVHEC College Logo" class="college-logo">
                 </div>
                 <div class="gallery-grid">
-                    <div class="gallery-item item-1 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Campus"></div>
+                    <div class="gallery-item item-1 reveal"><img src="https://i.pinimg.com/736x/c3/86/b2/c386b2ace00fd9b63cc9585a5ee1e591.jpg" alt="Campus"></div>
                     <div class="gallery-item item-3 reveal">
                         <iframe 
                             src="https://www.youtube.com/embed/KbOIlyPVcFw?autoplay=1&mute=1&loop=1&playlist=KbOIlyPVcFw&controls=0&showinfo=0&autohide=1" 
@@ -335,8 +335,8 @@
                             allowfullscreen>
                         </iframe>
                     </div>
-                    <div class="gallery-item item-2 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Labs"></div>
-                    <div class="gallery-item item-4 reveal"><img src="https://i.pinimg.com/736x/8b/69/44/8b69449116005eb9b11a4aa7e5b62201.jpg" alt="Students"></div>
+                    <div class="gallery-item item-2 reveal"><img src="https://i.pinimg.com/736x/79/7a/6e/797a6eaf2e5b4f9d54a24c40a798f2f0.jpg" alt="Labs"></div>
+                    <div class="gallery-item item-4 reveal"><img src="https://i.pinimg.com/736x/72/a9/a6/72a9a6667799cf09c1d25938f5d459ac.jpg" alt="Students"></div>
                 </div>
             </div>
         </section>
@@ -372,7 +372,7 @@
                     <div class="footer-socials">
                         <a href="https://www.facebook.com/svhec.svhec?mibextid=ZbWKwL" target="_blank"><i class='bx bxl-facebook-square'></i></a>
                         <a href="https://www.instagram.com/life_at_svh_easy/" target="_blank"><i class='bx bxl-instagram-alt'></i></a>
-                        <a href="https://www.linkedin.com/in/lokesh-m-265b832b3" target="_blank"><i class='bx bxl-linkedin-square'></i></a>
+                        <a href="https://www.linkedin.com/in/shree-venkateshwara-hi-tech-engineering-college-svhec-16123b172/" target="_blank"><i class='bx bxl-linkedin-square'></i></a>
                         <a href="https://www.youtube.com/@svhec" target="_blank"><i class='bx bxl-youtube'></i></a>
                     </div>
                 </div>
@@ -451,12 +451,16 @@
             } catch (error) { console.error("Error getting link click count:", error); }
         }
         const codeCraftersLink = document.getElementById("code-crafters-link");
+        
+        // ========= CORRECTED CODE BLOCK START =========
         codeCraftersLink.addEventListener("click", async (event) => {
-            event.preventDefault(); 
-            await trackLinkClick(); 
-            window.open(codeCraftersLink.href, '_blank'); 
-            showLinkClickCount();
+            event.preventDefault(); // இணைப்பின் இயல்பான செயல்பாட்டை நிறுத்துகிறது
+            window.open(codeCraftersLink.href, '_blank'); // உடனடியாக புதிய டாபில் திறக்கிறது
+            await trackLinkClick(); // கிளிக் எண்ணிக்கையை Firebase-ல் பதிவு செய்கிறது
+            showLinkClickCount(); // பக்கத்தில் உள்ள எண்ணிக்கையை புதுப்பிக்கிறது
         });
+        // ========= CORRECTED CODE BLOCK END =========
+
         document.addEventListener('DOMContentLoaded', () => {
             trackPageLoad();
             showLinkClickCount();
@@ -492,7 +496,26 @@
                 }
             });
         });
+		// Right-click செய்வதை முடக்குகிறது
+        document.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+        });
 
+        // Keyboard shortcuts-களை முடக்குகிறது
+        document.addEventListener('keydown', function(e) {
+            // F12 பட்டனை முடக்குகிறது
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C ஆகியவற்றை முடக்குகிறது
+            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
+                e.preventDefault();
+            }
+            // Ctrl+U-ஐ முடக்குகிறது
+            if (e.ctrlKey && e.key.toUpperCase() === 'U') {
+                e.preventDefault();
+            }
+        });
     </script>
 
 </body>

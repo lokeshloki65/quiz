@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head> 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students Post | SV Academicy</title>
@@ -195,30 +195,29 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 2000;
             opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
-            padding: 1rem; /* Added padding for mobile */
+            padding: 1rem;
         }
         .modal-overlay.show { opacity: 1; visibility: visible; }
         .modal-content {
             background: var(--card-bg);
             border-radius: var(--border-radius);
-            width: 100%; /* Changed from 90% */
+            width: 100%;
             max-width: 500px;
             transform: scale(0.95);
             transition: transform 0.3s;
-            display: flex; /* Added for layout */
-            flex-direction: column; /* Added for layout */
-            max-height: 90vh; /* Set a max height */
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
         .modal-header {
             padding: 1.5rem 2rem;
             border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; }
         .modal-title { font-size: 1.25rem; color: var(--heading-color); }
         .close-modal-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: var(--text-color); }
         
-        /* FIXED: Make modal body scrollable */
         .modal-body {
             overflow-y: auto;
             padding: 1.5rem 2rem;
@@ -244,7 +243,6 @@
         #image-preview { max-width: 100%; max-height: 250px; }
         #image-upload { display: none; }
 
-        /* FIXED: Make modal actions sticky to the bottom */
         .modal-actions {
             display: flex; justify-content: flex-end; gap: 1rem;
             padding: 1.5rem 2rem;
@@ -276,13 +274,34 @@
             .sidebar { position: fixed; left: -260px; height: 100%; }
             .sidebar.open { left: 0; }
             .main-content { margin-left: 0; }
-            .mobile-sidebar-toggle { display: block; }
+            
+            /* ============================================= */
+            /* --- INTHA STYLE THAAN PUDHUSA MAATHIRUKOM --- */
+            /* ============================================= */
+            .mobile-sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background-color: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: var(--heading-color);
+                box-shadow: var(--shadow);
+                transition: background-color var(--transition-speed);
+            }
+            .mobile-sidebar-toggle:hover {
+                background-color: #e2e8f0;
+            }
         }
         @media (max-width: 768px) {
             .main-content { padding: 1rem; }
             .posts-container { grid-template-columns: 1fr; }
             .add-post-btn { bottom: 1rem; right: 1rem; }
-            .modal-header, .modal-body, .modal-actions { padding: 1rem; } /* Reduce padding on mobile */
+            .modal-header, .modal-body, .modal-actions { padding: 1rem; }
             .modal-title { font-size: 1.1rem; }
         }
     </style>
@@ -292,7 +311,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <i class='bx bxs-brain logo-icon'></i>
-                <h1 class="logo-text"> SV cademicy</h1>
+                <h1 class="logo-text"> SV Academicy</h1>
             </div>
             <ul class="sidebar-nav">
                 <li class="nav-item">
@@ -304,8 +323,8 @@
                 <li class="nav-item">
                     <a href="assessments.html" class="nav-link"><i class='bx bxs-edit nav-icon'></i><span class="nav-text">Assessments</span></a>
                 </li>
-               
-                 <li class="nav-item">
+                
+                <li class="nav-item">
                     <a href="students_post.html" class="nav-link active"><i class='bx bxs-news nav-icon'></i><span class="nav-text">Students Post</span></a>
                 </li>
             </ul>
@@ -386,11 +405,9 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. CLOUDINARY CONFIGURATION ---
         const CLOUDINARY_CLOUD_NAME = "dk7tldvvb"; 
         const CLOUDINARY_UPLOAD_PRESET = "students_post.";
 
-        // --- 2. FIREBASE INITIALIZATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyDbd88RXQ9XdovaJuNvCJQCHgwAG58ckCM",
             authDomain: "student-central-hub-5w4l8.firebaseapp.com",
@@ -404,7 +421,6 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
         
-        // --- 3. UI ELEMENTS ---
         let currentUser = null;
         const postsContainer = document.getElementById('posts-container');
         const modal = document.getElementById('add-post-modal');
@@ -419,7 +435,6 @@
         const githubLinkInput = document.getElementById('post-github-link');
         const portfolioLinkInput = document.getElementById('post-portfolio-link');
 
-        // --- 4. AUTHENTICATION & INITIALIZATION ---
         auth.onAuthStateChanged(user => {
             if (user) {
                 loadUserProfile(user);
@@ -454,7 +469,6 @@
             }).catch(error => console.error("Error fetching user profile:", error));
         }
         
-        // --- 5. FETCH AND RENDER POSTS ---
         function fetchPosts() {
             db.collection('student_posts').orderBy('timestamp', 'desc')
                 .onSnapshot(snapshot => {
@@ -542,7 +556,6 @@
             }
         }
         
-        // --- 6. EVENT LISTENERS ---
         postsContainer.addEventListener('click', e => {
             const postCard = e.target.closest('.post-card');
             if (!postCard || !currentUser) return;
@@ -583,7 +596,6 @@
             await postRef.update({ comments: firebase.firestore.FieldValue.arrayUnion(newComment) });
         }
 
-        // --- 7. MODAL LOGIC & POST SUBMISSION ---
         addPostBtn.addEventListener('click', () => modal.classList.add('show'));
         closeModalBtn.addEventListener('click', resetAndHideModal);
         cancelPostBtn.addEventListener('click', resetAndHideModal);
@@ -679,7 +691,6 @@
             if(!isLoading) validateForm();
         }
 
-        // --- 8. UTILITY FUNCTIONS ---
         function formatTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
             if (seconds < 5) return "just now";
@@ -697,7 +708,6 @@
             return p.innerHTML;
         }
         
-        // --- Sidebar & Logout Logic ---
         document.getElementById('logout-btn').addEventListener('click', () => {
             auth.signOut().then(() => window.location.href = 'index.html');
         });

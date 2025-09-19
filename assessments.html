@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         } else {
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         }
     });
 
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     logoutBtn.addEventListener('click', () => {
-        auth.signOut().then(() => window.location.href = 'index.html');
+        auth.signOut().then(() => window.location.href = 'login.html');
     });
 
     // NEW: Mobile sidebar toggle logic
@@ -330,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 

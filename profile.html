@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserId = user.uid;
             loadUserProfile(user.uid);
         } else {
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         }
     });
     
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('logout-btn').addEventListener('click', () => {
         auth.signOut().then(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         });
     });
 
@@ -301,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
 
 

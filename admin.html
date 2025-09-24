@@ -40,6 +40,8 @@
         .btn-primary:hover:not(:disabled) { background-color: #6a5af9; }
         .btn-secondary { background-color: #6c757d; color: #fff; }
         .btn-success { background-color: var(--success-color); color:#fff; }
+        .btn-ai { background: linear-gradient(135deg, #6e45e2, #88d3ce); color: #fff; text-decoration: none; }
+        .btn-ai:hover { color: #fff; opacity: 0.9; }
         .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.3rem; border-radius: 50%; }
         .action-btn:hover { background-color: #f3f4f6; }
         .btn-edit { color: var(--info-color); }
@@ -147,9 +149,13 @@
                     <div class="form-group"><label for="test-duration">Duration (in minutes)</label><input type="number" id="test-duration" required></div>
                     <div class="form-group" id="question-file-group">
                         <label for="question-file">Upload Questions (.txt file)</label><input type="file" id="question-file" accept=".txt">
-                        <small>Format: Numbered question, lettered options (a), b), etc.), and "Correct Answer:". Separate questions with "---". <br> <br>
-                        <a href="#" id="download-sample-btn">Download sample format</a>
-                        </small>
+                        <small>Format: Numbered question, lettered options (a), b), etc.), and "Correct Answer:". Separate questions with "---".</small>
+                        <div style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem;">
+                           <a href="#" id="download-sample-btn">Download sample format</a>
+                           <a href="https://lokeshloki.site" target="_blank" class="btn btn-ai">
+                                <i class='bx bxs-magic-wand'></i> AI Generate
+                           </a>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary" id="save-test-btn">Save Test</button>
                     <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
@@ -878,6 +884,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
-
